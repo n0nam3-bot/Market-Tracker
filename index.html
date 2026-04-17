@@ -1,501 +1,824 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Market Pulse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
-    :root{--bg0:#06101d;--bg1:#0a1423;--line:rgba(148,163,184,.14);--text:#edf4ff;--muted:#8fa3bf;--good:#31d27d;--bad:#ff6b7a;--warn:#ffb84d;--accent:#7c8cff;--accent2:#4ed2ff;--shadow:0 20px 60px rgba(0,0,0,.34);--r:24px}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);background:linear-gradient(180deg,var(--bg0) 0%,var(--bg1) 38%,#060c17 100%)}
-    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.30;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(circle at center,#000,transparent 92%)}
-    .wrap{max-width:1480px;margin:0 auto;padding:18px;position:relative;z-index:1}
-    .panel{background:linear-gradient(180deg,rgba(18,28,47,.88),rgba(10,16,28,.8));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);backdrop-filter:blur(14px)}
-    .hero{display:grid;grid-template-columns:1.45fr .95fr;gap:16px;margin-bottom:16px}
-    .hero-main,.hero-side,.section{padding:18px}
-    .brand{display:flex;gap:14px;align-items:center;margin-bottom:14px}
-    .mark{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-weight:800;color:#06101d;background:linear-gradient(135deg,var(--accent),var(--accent2))}
-    .brand h1{margin:0;font-size:28px;letter-spacing:-.04em}
-    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
-    .topline{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
-    .badge{display:flex;gap:8px;align-items:center;padding:9px 12px;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px}
-    .dot{width:9px;height:9px;border-radius:99px;background:var(--good);box-shadow:0 0 0 6px rgba(49,210,125,.12)}
-    .badge small{display:block;color:var(--muted);font-weight:600}
-    .badge strong{display:block}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn,.chip{font:inherit}
-    .btn{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:11px 15px;border-radius:14px;cursor:pointer;transition:.15s}
-    .btn:hover{transform:translateY(-1px);border-color:rgba(124,140,255,.42);background:rgba(124,140,255,.14)}
-    .btn.primary{border:0;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#06101d;font-weight:800}
-    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
-    .kpi{padding:14px 15px;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:18px}
-    .kpi .label{font-size:11px;font-weight:800;color:#6f84a1;letter-spacing:.14em;text-transform:uppercase}
-    .kpi .value{margin-top:8px;font-size:21px;font-weight:800;letter-spacing:-.03em}
-    .kpi .sub{margin-top:4px;color:var(--muted);font-size:13px}
-    .side-grid{display:grid;gap:12px}
-    .side-card{padding:15px;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:18px}
-    .side-card h3{margin:0 0 8px;font-size:14px}
-    .side-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
-    .strip,.range-row{display:flex;gap:10px;overflow:auto;scrollbar-width:thin}
-    .strip{padding:2px 0 6px}
-    .pill,.chip{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);border-radius:999px;padding:10px 12px;cursor:pointer;white-space:nowrap;transition:.15s}
-    .pill.active,.pill:hover,.chip.active,.chip:hover{background:rgba(124,140,255,.14);border-color:rgba(124,140,255,.35)}
-    .pill{display:flex;gap:8px;align-items:center}
-    .pill .sym{font-weight:800}
-    .pill .chg{font-size:12px}
-    .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
-    main{display:grid;grid-template-columns:1fr 1.45fr;gap:16px}
-    .section-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}
-    .section-head h2{margin:0;font-size:18px;letter-spacing:-.03em}
-    .hint{color:var(--muted);font-size:13px;line-height:1.45;margin-top:4px}
-    .pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .pick{padding:15px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.035);cursor:pointer;transition:.15s;overflow:hidden}
-    .pick:hover,.pick.active{transform:translateY(-1px);border-color:rgba(124,140,255,.4);background:rgba(124,140,255,.08)}
-    .pick-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .rank{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#6f84a1;font-weight:800}
-    .sym{font-size:24px;font-weight:800;letter-spacing:-.04em}
-    .name{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.35}
-    .mini{width:110px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
-    .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .tag{padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700}
-    .tag.good{color:#a8ffd0;border-color:rgba(49,210,125,.3);background:rgba(49,210,125,.08)}
-    .tag.bad{color:#ffb3bd;border-color:rgba(255,107,122,.3);background:rgba(255,107,122,.08)}
-    .reason{margin-top:10px;font-size:13px;line-height:1.5}
-    .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-    .metric{padding:10px 11px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
-    .metric .label{font-size:11px;font-weight:800;color:#6f84a1;letter-spacing:.14em;text-transform:uppercase}
-    .metric .val{margin-top:6px;font-size:15px;font-weight:800}
-    .metric .sub{margin-top:3px;color:var(--muted);font-size:12px}
-    .chart-shell{border:1px solid var(--line);border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(10,18,31,.98),rgba(9,14,24,.9));min-height:380px}
-    .chart-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:18px 18px 0}
-    .chart-title{display:flex;flex-direction:column;gap:6px}
-    .chart-title strong{font-size:24px;letter-spacing:-.04em}
-    .chart-title span{color:var(--muted);font-size:13px}
-    .price{text-align:right}
-    .price strong{font-size:28px;letter-spacing:-.05em}
-    .price .change{margin-top:5px;font-size:13px;font-weight:700}
-    .chart-box{height:320px;padding:8px 8px 14px}
-    .chart-note{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:0 18px 18px;color:var(--muted);font-size:12px}
-    .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
-    .list{display:grid;gap:10px}
-    .row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 13px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.035)}
-    .row .left{display:flex;flex-direction:column;gap:4px}
-    .row .left strong{font-size:14px}
-    .row .left span{font-size:12px;color:var(--muted)}
-    .row .right{text-align:right}
-    .row .right strong{display:block;font-size:15px}
-    .row .right span{display:block;font-size:12px;color:var(--muted)}
-    .loading,.error{display:grid;place-items:center;min-height:220px;text-align:center;color:var(--muted)}
-    .skeleton{position:relative;overflow:hidden}
-    .skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:shine 1.2s infinite}
-    @keyframes shine{to{transform:translateX(100%)}}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
-    .modal-backdrop.open{display:flex}
-    .modal{width:min(620px,100%);padding:18px;border-radius:24px;background:linear-gradient(180deg,rgba(16,24,39,.98),rgba(9,14,24,.98));border:1px solid var(--line);box-shadow:var(--shadow)}
-    .modal h3{margin:0 0 8px;font-size:20px}
-    .modal p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
-    .field{display:grid;gap:8px;margin-top:12px}
-    .field label{font-size:11px;font-weight:800;color:#6f84a1;letter-spacing:.14em;text-transform:uppercase}
-    .field input,.field textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;outline:none}
-    .field textarea{min-height:90px;resize:vertical}
-    .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
-    @media (max-width:1120px){.hero,main{grid-template-columns:1fr}.kpis,.pick-grid,.subgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media (max-width:760px){.wrap{padding:12px}.hero-main,.hero-side,.section{padding:16px}.kpis,.pick-grid,.subgrid{grid-template-columns:1fr}.chart-box{height:280px}.chart-shell{min-height:340px}.chart-head{flex-direction:column}.price{text-align:left}.actions{justify-content:flex-start}.brand h1{font-size:23px}}
+    :root {
+      --bg0: #060d18;
+      --bg1: #091220;
+      --bg2: #0d1a2e;
+      --panel: rgba(10,18,34,.82);
+      --line: rgba(120,160,220,.13);
+      --text: #e8f2ff;
+      --muted: #7a9ab8;
+      --good: #2de08c;
+      --bad: #ff5a6e;
+      --warn: #ffb84d;
+      --accent: #4f7cff;
+      --accent2: #00d4ff;
+      --accent3: #a78bfa;
+      --shadow: 0 24px 70px rgba(0,0,0,.42);
+      --r: 20px;
+      --mono: 'Space Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg0);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ambient bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 0%, rgba(79,124,255,.1) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 100%, rgba(0,212,255,.07) 0%, transparent 55%);
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.018'%3E%3Cpath d='M0 0h1v40H0zM40 0h1v40h-1zM0 0v1h40V0zM0 40v1h40v-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .wrap { max-width: 1480px; margin: 0 auto; padding: 16px; position: relative; z-index: 1; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* ── SETUP SCREEN ──────────────────────────────── */
+    #setupScreen {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(4,8,18,.97);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #setupScreen.hidden { display: none; }
+    .setup-box {
+      width: min(560px, 100%);
+      background: linear-gradient(160deg, rgba(13,22,46,.98), rgba(8,14,28,.98));
+      border: 1px solid rgba(79,124,255,.3);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(79,124,255,.1);
+    }
+    .setup-logo { display: flex; gap: 14px; align-items: center; margin-bottom: 24px; }
+    .setup-mark {
+      width: 52px; height: 52px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-family: var(--mono); font-size: 18px; font-weight: 700; color: #06101d;
+    }
+    .setup-logo h1 { font-size: 26px; font-weight: 800; letter-spacing: -.04em; }
+    .setup-logo p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .setup-steps { margin-bottom: 24px; }
+    .step { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: none; }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(79,124,255,.18); border: 1px solid rgba(79,124,255,.3); display: grid; place-items: center; flex-shrink: 0; font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent2); }
+    .step p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .step strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+    .setup-field { margin-bottom: 14px; }
+    .setup-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .setup-field input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--text); font: inherit; font-size: 13px; outline: none; transition: border-color .2s; }
+    .setup-field input:focus { border-color: rgba(79,124,255,.45); background: rgba(79,124,255,.06); }
+    .setup-field input::placeholder { color: var(--muted); opacity: .6; }
+    .setup-error { color: var(--bad); font-size: 12px; margin-top: 8px; display: none; }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    .header {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      align-items: center; justify-content: space-between;
+      padding: 16px 20px; margin-bottom: 14px;
+    }
+    .brand { display: flex; gap: 12px; align-items: center; }
+    .mark {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-family: var(--mono); font-size: 15px; font-weight: 700; color: #06101d;
+    }
+    .brand h1 { font-size: 22px; font-weight: 800; letter-spacing: -.04em; }
+    .brand p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .status-badge {
+      display: flex; gap: 9px; align-items: center;
+      padding: 8px 13px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.04); border-radius: 999px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--good); box-shadow: 0 0 0 5px rgba(45,224,140,.14); transition: all .4s; }
+    .dot.busy { background: var(--warn); box-shadow: 0 0 0 5px rgba(255,184,77,.14); }
+    .dot.err { background: var(--bad); box-shadow: 0 0 0 5px rgba(255,90,110,.14); }
+    .status-badge small { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; }
+    .status-badge strong { font-size: 13px; display: block; }
+
+    /* ── BUTTONS ─────────────────────────────────────── */
+    .btn {
+      border: 1px solid var(--line); background: rgba(255,255,255,.05);
+      color: var(--text); padding: 10px 16px; border-radius: 12px;
+      cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(79,124,255,.4); background: rgba(79,124,255,.1); }
+    .btn.primary { border: 0; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #06101d; font-weight: 800; }
+    .btn.primary:hover { opacity: .92; transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+    .btn.sm { padding: 7px 12px; font-size: 12px; border-radius: 10px; }
+
+    /* ── KPI ROW ─────────────────────────────────────── */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .kpi {
+      padding: 16px 18px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.03); border-radius: var(--r);
+      position: relative; overflow: hidden;
+    }
+    .kpi::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: .5;
+    }
+    .kpi .label { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .kpi .value { font-size: 22px; font-weight: 800; letter-spacing: -.04em; margin-top: 8px; font-family: var(--mono); }
+    .kpi .sub { font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+    /* ── TICKER STRIP ─────────────────────────────────── */
+    .strip-wrap { padding: 14px 18px; margin-bottom: 14px; }
+    .strip-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .strip-head h2 { font-size: 14px; font-weight: 700; letter-spacing: .01em; }
+    .strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent; padding-bottom: 4px; }
+    .strip::-webkit-scrollbar { height: 3px; }
+    .strip::-webkit-scrollbar-track { background: transparent; }
+    .strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 99px; }
+    .pill {
+      border: 1px solid var(--line); background: rgba(255,255,255,.04);
+      color: var(--text); border-radius: 999px; padding: 9px 14px;
+      cursor: pointer; white-space: nowrap; display: flex; gap: 9px;
+      align-items: center; font: inherit; font-size: 13px; transition: all .15s;
+      flex-shrink: 0;
+    }
+    .pill .sym { font-weight: 800; font-family: var(--mono); font-size: 12px; }
+    .pill .chg { font-size: 11px; font-weight: 700; }
+    .pill:hover, .pill.active { background: rgba(79,124,255,.14); border-color: rgba(79,124,255,.35); }
+
+    /* ── MAIN GRID ─────────────────────────────────────── */
+    .main-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 14px; }
+
+    /* ── PICK LIST ─────────────────────────────────────── */
+    .section { padding: 18px 20px; }
+    .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .section-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -.03em; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+    .pick-list { display: grid; gap: 10px; }
+    .pick {
+      padding: 14px 15px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.03); border-radius: 16px;
+      cursor: pointer; transition: all .15s;
+    }
+    .pick:hover, .pick.active {
+      border-color: rgba(79,124,255,.35); background: rgba(79,124,255,.07);
+      transform: translateX(2px);
+    }
+    .pick-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .pick-sym { font-size: 18px; font-weight: 800; letter-spacing: -.04em; font-family: var(--mono); }
+    .pick-name { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .pick-right { text-align: right; }
+    .pick-price { font-size: 16px; font-weight: 800; font-family: var(--mono); }
+    .pick-chg { font-size: 12px; font-weight: 700; margin-top: 3px; }
+    .pick-meta { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+    .tag {
+      padding: 5px 9px; border-radius: 999px;
+      background: rgba(255,255,255,.045); border: 1px solid var(--line);
+      color: var(--muted); font-size: 11px; font-weight: 700;
+    }
+    .tag.good { color: #9dffd4; border-color: rgba(45,224,140,.3); background: rgba(45,224,140,.08); }
+    .tag.bad { color: #ffb3bc; border-color: rgba(255,90,110,.3); background: rgba(255,90,110,.08); }
+    .tag.neutral { color: #c4d4ff; border-color: rgba(79,124,255,.3); background: rgba(79,124,255,.08); }
+    .pick-reason { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .pick-rank { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #4a6a8a; font-weight: 800; margin-bottom: 5px; }
+
+    /* ── CHART PANEL ─────────────────────────────────── */
+    .chart-section { display: flex; flex-direction: column; gap: 14px; }
+    .chart-shell {
+      border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+      background: linear-gradient(180deg, rgba(9,16,30,.98), rgba(6,10,20,.96));
+    }
+    .chart-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 18px 18px 0; flex-wrap: wrap; }
+    .chart-title strong { font-size: 22px; font-weight: 800; letter-spacing: -.04em; font-family: var(--mono); }
+    .chart-title span { font-size: 12px; color: var(--muted); display: block; margin-top: 3px; }
+    .chart-price { text-align: right; }
+    .chart-price strong { font-size: 24px; font-weight: 800; letter-spacing: -.04em; font-family: var(--mono); }
+    .chart-price .change { font-size: 13px; font-weight: 700; margin-top: 4px; }
+    .range-row { display: flex; gap: 6px; overflow-x: auto; padding: 12px 18px 0; scrollbar-width: none; }
+    .range-row::-webkit-scrollbar { display: none; }
+    .chip {
+      border: 1px solid var(--line); background: rgba(255,255,255,.04);
+      color: var(--muted); border-radius: 999px; padding: 7px 12px;
+      cursor: pointer; font: inherit; font-size: 12px; font-weight: 700;
+      transition: all .15s; white-space: nowrap; font-family: var(--mono);
+    }
+    .chip:hover, .chip.active { background: rgba(79,124,255,.15); border-color: rgba(79,124,255,.4); color: var(--text); }
+    .chart-box { height: 280px; padding: 10px 10px 14px; }
+    .chart-note { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 0 18px 14px; color: var(--muted); font-size: 11px; font-family: var(--mono); }
+
+    /* ── SUBGRID (snapshot + news) ─────────────────── */
+    .subgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .sub-panel { padding: 16px; border-radius: var(--r); }
+    .sub-head { font-size: 14px; font-weight: 700; margin-bottom: 12px; letter-spacing: -.01em; }
+    .sub-hint { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+
+    .mkt-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,.03); margin-bottom: 8px;
+    }
+    .mkt-row:last-child { margin-bottom: 0; }
+    .mkt-sym { font-weight: 800; font-size: 14px; font-family: var(--mono); }
+    .mkt-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .mkt-val { text-align: right; }
+    .mkt-price { font-size: 14px; font-weight: 800; font-family: var(--mono); }
+    .mkt-chg { font-size: 11px; font-weight: 700; margin-top: 2px; }
+
+    /* ── NEWS ─────────────────────────────────────────── */
+    .news-list { display: grid; gap: 8px; max-height: 240px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent; }
+    .news-item {
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,.03); cursor: pointer; transition: all .15s; text-decoration: none;
+      display: block;
+    }
+    .news-item:hover { background: rgba(79,124,255,.08); border-color: rgba(79,124,255,.25); }
+    .news-headline { font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--text); }
+    .news-meta { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .news-source { color: var(--accent2); font-weight: 700; }
+
+    /* ── LOADING / SKELETON ─────────────────────────── */
+    .loading { color: var(--muted); font-size: 13px; text-align: center; padding: 30px; }
+    .skeleton { position: relative; overflow: hidden; background: rgba(255,255,255,.04); border-radius: 14px; }
+    .skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent); animation: shine 1.3s infinite; }
+    @keyframes shine { to { transform: translateX(100%); } }
+
+    /* ── MISC ─────────────────────────────────────────── */
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .scan-note { font-size: 12px; color: var(--muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+    /* ── MODAL ─────────────────────────────────────────── */
+    .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+    .modal-back.open { display: flex; }
+    .modal { width: min(520px, 100%); padding: 22px; border-radius: 22px; background: linear-gradient(180deg, rgba(14,22,40,.98), rgba(8,14,26,.98)); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .field input, .field textarea { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--text); font: inherit; font-size: 13px; outline: none; transition: border-color .2s; }
+    .field input:focus, .field textarea:focus { border-color: rgba(79,124,255,.4); }
+    .field textarea { min-height: 80px; resize: vertical; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 680px) { .kpi-row, .subgrid { grid-template-columns: 1fr; } .chart-box { height: 220px; } .header { flex-direction: column; align-items: flex-start; } .chart-head { flex-direction: column; } .chart-price { text-align: left; } }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <section class="panel hero">
-    <div class="hero-main">
-      <div class="brand">
-        <div class="mark">M</div>
-        <div>
-          <h1>Market Pulse</h1>
-          <p>Fast stock dashboard powered by your Google Apps Script web app.</p>
-        </div>
-      </div>
-      <div class="topline">
-        <div class="badge">
-          <span class="dot" id="statusDot"></span>
-          <div><small>Live status</small><strong id="liveStatus">Loading…</strong></div>
-        </div>
-        <div class="badge"><div><small>Last refresh</small><strong id="lastRefresh">—</strong></div></div>
-        <div class="actions">
-          <button class="btn" id="settingsBtn">Settings</button>
-          <button class="btn primary" id="refreshBtn">Refresh now</button>
-        </div>
-      </div>
 
-      <div class="kpis">
-        <div class="kpi"><div class="label">Top pick</div><div class="value" id="kpiTopPick">—</div><div class="sub" id="kpiTopPickSub">Waiting for data</div></div>
-        <div class="kpi"><div class="label">Best momentum</div><div class="value" id="kpiMomentum">—</div><div class="sub" id="kpiMomentumSub">Daily change</div></div>
-        <div class="kpi"><div class="label">Market breadth</div><div class="value" id="kpiBreadth">—</div><div class="sub" id="kpiBreadthSub">Advancers vs laggards</div></div>
-        <div class="kpi"><div class="label">Universe</div><div class="value" id="kpiUniverse">0</div><div class="sub">Symbols loaded instantly</div></div>
-      </div>
-    </div>
-
-    <aside class="hero-side">
-      <div class="side-grid">
-        <div class="side-card"><h3>Fixed data path</h3><p>The browser no longer calls Yahoo directly. It asks this Apps Script web app for quotes and charts, which avoids the CORS failure.</p></div>
-        <div class="side-card"><h3>Fast load</h3><p>Quotes load in one batch. Charts only load when you click a stock.</p></div>
-        <div class="side-card"><h3>Sheet logging</h3><p>Rows are written to your <strong>Logs</strong> tab in the spreadsheet you provided.</p></div>
-      </div>
-    </aside>
-  </section>
-
-  <section class="panel section" style="margin-bottom:16px">
-    <div class="section-head" style="margin-bottom:10px">
+<!-- ── SETUP SCREEN ───────────────────────────────────── -->
+<div id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <div class="setup-mark">MP</div>
       <div>
-        <h2>Top stocks this hour</h2>
-        <div class="hint">Click a stock to load its current price and chart right away.</div>
+        <h1>Market Pulse</h1>
+        <p>Connect your Apps Script web app to begin</p>
       </div>
     </div>
-    <div class="strip" id="tickerStrip"></div>
-  </section>
-
-  <main>
-    <section class="panel section">
-      <div class="section-head">
+    <div class="setup-steps">
+      <div class="step">
+        <div class="step-num">1</div>
         <div>
-          <h2>Top pick list</h2>
-          <div class="hint">Sorted from strongest to weakest using live quote data.</div>
+          <strong>Open your Apps Script project</strong>
+          <p>In Google Sheets → Extensions → Apps Script. Paste the <code>Code.gs</code> code provided.</p>
         </div>
       </div>
-      <div id="pickList" class="pick-grid">
-        <div class="loading skeleton" style="min-height:420px;border-radius:20px">Loading stocks…</div>
-      </div>
-      <div class="hint" style="margin-top:12px" id="scanNote">Loading…</div>
-    </section>
-
-    <section class="panel section">
-      <div class="section-head">
+      <div class="step">
+        <div class="step-num">2</div>
         <div>
-          <h2>Selected stock chart</h2>
-          <div class="hint" id="chartHint">Choose a ticker to load the chart.</div>
-        </div>
-        <div class="range-row" id="rangeRow">
-          <button class="chip" data-range="1H">1H</button>
-          <button class="chip active" data-range="1D">1D</button>
-          <button class="chip" data-range="1W">1W</button>
-          <button class="chip" data-range="1M">1M</button>
-          <button class="chip" data-range="1Y">1Y</button>
-          <button class="chip" data-range="3Y">3Y</button>
-          <button class="chip" data-range="5Y">5Y</button>
-          <button class="chip" data-range="MAX">MAX</button>
+          <strong>Deploy as a Web App</strong>
+          <p>Deploy → New deployment → Web app. Set <em>Execute as: Me</em> and <em>Who has access: Anyone</em>. Copy the URL.</p>
         </div>
       </div>
-
-      <div class="chart-shell">
-        <div class="chart-head">
-          <div class="chart-title">
-            <strong id="chartSymbol">SPY</strong>
-            <span id="chartName">S&P 500 ETF</span>
-          </div>
-          <div class="price">
-            <strong id="chartPrice">—</strong>
-            <div class="change" id="chartChange">Loading…</div>
-          </div>
-        </div>
-        <div class="chart-box"><canvas id="mainChart"></canvas></div>
-        <div class="chart-note">
-          <span id="chartPeriod">1D view</span>
-          <span id="chartRangeDetail">Default range: 1 day</span>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <strong>Paste the URL below</strong>
+          <p>The dashboard will connect and start loading live data from Yahoo Finance.</p>
         </div>
       </div>
-
-      <div class="subgrid">
-        <div class="panel" style="padding:14px;border-radius:20px">
-          <div class="section-head" style="margin-bottom:10px">
-            <div>
-              <h2 style="font-size:16px">Market snapshot</h2>
-              <div class="hint">Major index context for the current names.</div>
-            </div>
-          </div>
-          <div class="list" id="marketRows">
-            <div class="loading skeleton" style="min-height:170px;border-radius:18px">Loading market snapshot…</div>
-          </div>
-        </div>
-
-        <div class="panel" style="padding:14px;border-radius:20px">
-          <div class="section-head" style="margin-bottom:10px">
-            <div>
-              <h2 style="font-size:16px">Ranking logic</h2>
-              <div class="hint">Why the top stock sits at the top.</div>
-            </div>
-          </div>
-          <div class="list" id="logicBox">
-            <div class="loading skeleton" style="min-height:170px;border-radius:18px">Loading ranking logic…</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+    </div>
+    <div class="setup-field">
+      <label>Apps Script Web App URL</label>
+      <input id="setupUrl" type="url" placeholder="https://script.google.com/macros/s/AKfycbzh-Bk4vW_RD6hCoQ4C6LxRdkvmJ7947a8gmH3OfDqExC9SwzcSjmF3ulDiwV7vkT52/exec" />
+      <div class="setup-error" id="setupError">Please enter a valid Apps Script URL.</div>
+    </div>
+    <button class="btn primary" id="setupBtn" style="width:100%;padding:14px;font-size:15px">Connect &amp; Load Dashboard →</button>
+  </div>
 </div>
 
-<div class="modal-backdrop" id="settingsModal">
+<!-- ── MAIN UI ─────────────────────────────────────────── -->
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="panel header">
+    <div class="brand">
+      <div class="mark">MP</div>
+      <div>
+        <h1>Market Pulse</h1>
+        <p>Live market data via Yahoo Finance + Google Apps Script</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge">
+        <span class="dot" id="statusDot"></span>
+        <div><small>Status</small><strong id="liveStatus">Connecting…</strong></div>
+      </div>
+      <div class="status-badge">
+        <div><small>Refreshed</small><strong id="lastRefresh">—</strong></div>
+      </div>
+      <button class="btn sm" id="settingsBtn">⚙ Settings</button>
+      <button class="btn primary" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">Top Pick</div>
+      <div class="value" id="kpiTopPick">—</div>
+      <div class="sub" id="kpiTopPickSub">Waiting…</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Best Momentum</div>
+      <div class="value" id="kpiMomentum">—</div>
+      <div class="sub" id="kpiMomentumSub">Daily change</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Market Breadth</div>
+      <div class="value" id="kpiBreadth">—</div>
+      <div class="sub" id="kpiBreadthSub">Advancers / total</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Universe</div>
+      <div class="value" id="kpiUniverse">—</div>
+      <div class="sub">Symbols tracked</div>
+    </div>
+  </div>
+
+  <!-- Ticker Strip -->
+  <div class="panel strip-wrap" style="margin-bottom:14px">
+    <div class="strip-head">
+      <h2>Live Tickers</h2>
+      <span class="hint" id="stripNote">Loading…</span>
+    </div>
+    <div class="strip" id="tickerStrip"><div class="loading">Loading tickers…</div></div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Pick List -->
+    <section class="panel section">
+      <div class="section-head">
+        <div>
+          <h2>Top Ranked Stocks</h2>
+          <div class="hint">Scored by momentum, relative volume, and market cap weight.</div>
+        </div>
+      </div>
+      <div class="pick-list" id="pickList">
+        <div class="skeleton" style="height:80px"></div>
+        <div class="skeleton" style="height:80px;margin-top:10px"></div>
+        <div class="skeleton" style="height:80px;margin-top:10px"></div>
+        <div class="skeleton" style="height:80px;margin-top:10px"></div>
+      </div>
+      <div class="scan-note" id="scanNote">Loading data…</div>
+    </section>
+
+    <!-- Chart + Snapshot + News -->
+    <div class="chart-section">
+      <section class="panel section" style="padding-bottom:16px">
+        <div class="section-head" style="margin-bottom:8px">
+          <div>
+            <h2 id="chartSymbol">SPY</h2>
+            <div class="hint" id="chartHint">Choose a ticker to load the chart.</div>
+          </div>
+          <div class="range-row" id="rangeRow" style="padding:0">
+            <button class="chip" data-range="1H">1H</button>
+            <button class="chip active" data-range="1D">1D</button>
+            <button class="chip" data-range="1W">1W</button>
+            <button class="chip" data-range="1M">1M</button>
+            <button class="chip" data-range="1Y">1Y</button>
+            <button class="chip" data-range="3Y">3Y</button>
+            <button class="chip" data-range="5Y">5Y</button>
+            <button class="chip" data-range="MAX">MAX</button>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-head">
+            <div class="chart-title">
+              <strong id="chartSym2">—</strong>
+              <span id="chartName">S&amp;P 500 ETF</span>
+            </div>
+            <div class="chart-price">
+              <strong id="chartPrice">—</strong>
+              <div class="change" id="chartChange">Loading…</div>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="mainChart"></canvas></div>
+          <div class="chart-note">
+            <span id="chartPeriod">1D view</span>
+            <span id="chartRangeDetail">Yahoo Finance data</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="subgrid">
+        <!-- Market Snapshot -->
+        <div class="panel sub-panel">
+          <div class="sub-head">Market Snapshot</div>
+          <div class="sub-hint">Major index context</div>
+          <div id="marketRows"><div class="skeleton" style="height:130px"></div></div>
+        </div>
+
+        <!-- News -->
+        <div class="panel sub-panel">
+          <div class="sub-head">Latest News</div>
+          <div class="sub-hint" id="newsHint">News for selected stock</div>
+          <div class="news-list" id="newsList"><div class="skeleton" style="height:130px"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ──────────────────────────────────── -->
+<div class="modal-back" id="settingsModal">
   <div class="modal">
     <h3>Settings</h3>
-    <p>The web app URL is the deployed Apps Script URL. The dashboard works from this same project, so you only need this if you are reusing settings in local storage.</p>
+    <p>Update your Apps Script web app URL or change the stock universe. Changes take effect on the next refresh.</p>
     <div class="field">
-      <label for="webAppUrl">Web app URL</label>
-      <input id="webAppUrl" type="text" placeholder="Paste deployed Apps Script web app URL here" />
+      <label>Web App URL</label>
+      <input id="settingsUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" />
     </div>
     <div class="field">
-      <label for="watchlistInput">Ticker universe</label>
-      <textarea id="watchlistInput" placeholder="AAPL, MSFT, NVDA, AMZN, META"></textarea>
+      <label>Stock Universe (comma-separated tickers)</label>
+      <textarea id="settingsUniverse"></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn" id="closeSettings">Cancel</button>
-      <button class="btn primary" id="saveSettings">Save</button>
+      <button class="btn" id="closeSettingsBtn">Cancel</button>
+      <button class="btn primary" id="saveSettingsBtn">Save &amp; Refresh</button>
     </div>
   </div>
 </div>
 
 <script>
-  const DEFAULT_UNIVERSE = ['NVDA','MSFT','AAPL','AMZN','META','GOOGL','TSLA','AMD','AVGO','NFLX','JPM','COST','PLTR','COIN'];
-  const TIMEFRAMES = { '1H': { label:'1 hour' }, '1D': { label:'1 day' }, '1W': { label:'1 week' }, '1M': { label:'1 month' }, '1Y': { label:'1 year' }, '3Y': { label:'3 years' }, '5Y': { label:'5 years' }, 'MAX': { label:'max' } };
+const DEFAULT_UNIVERSE = 'NVDA,MSFT,AAPL,AMZN,META,GOOGL,TSLA,AMD,AVGO,NFLX,JPM,COST,PLTR,COIN';
 
-  const state = {
-    selectedTicker: localStorage.getItem('mp_selected_ticker_gas') || 'SPY',
-    selectedRange: localStorage.getItem('mp_selected_range_gas') || '1D',
-    webAppUrl: localStorage.getItem('mp_webapp_url_gas') || '',
-    ranking: [],
-    market: {},
-    chart: null,
-    loadingChartToken: 0
-  };
+const TIMEFRAMES = {
+  '1H': 'Past Hour', '1D': '1 Day', '1W': '1 Week',
+  '1M': '1 Month', '1Y': '1 Year', '3Y': '3 Years',
+  '5Y': '5 Years', 'MAX': 'Max'
+};
 
-  const el = {
-    statusDot: document.getElementById('statusDot'),
-    liveStatus: document.getElementById('liveStatus'),
-    lastRefresh: document.getElementById('lastRefresh'),
-    refreshBtn: document.getElementById('refreshBtn'),
-    settingsBtn: document.getElementById('settingsBtn'),
-    tickerStrip: document.getElementById('tickerStrip'),
-    pickList: document.getElementById('pickList'),
-    scanNote: document.getElementById('scanNote'),
-    chartSymbol: document.getElementById('chartSymbol'),
-    chartName: document.getElementById('chartName'),
-    chartPrice: document.getElementById('chartPrice'),
-    chartChange: document.getElementById('chartChange'),
-    chartHint: document.getElementById('chartHint'),
-    chartPeriod: document.getElementById('chartPeriod'),
-    chartRangeDetail: document.getElementById('chartRangeDetail'),
-    marketRows: document.getElementById('marketRows'),
-    logicBox: document.getElementById('logicBox'),
-    kpiTopPick: document.getElementById('kpiTopPick'),
-    kpiTopPickSub: document.getElementById('kpiTopPickSub'),
-    kpiMomentum: document.getElementById('kpiMomentum'),
-    kpiMomentumSub: document.getElementById('kpiMomentumSub'),
-    kpiBreadth: document.getElementById('kpiBreadth'),
-    kpiBreadthSub: document.getElementById('kpiBreadthSub'),
-    kpiUniverse: document.getElementById('kpiUniverse'),
-    settingsModal: document.getElementById('settingsModal'),
-    webAppUrl: document.getElementById('webAppUrl'),
-    watchlistInput: document.getElementById('watchlistInput'),
-    closeSettings: document.getElementById('closeSettings'),
-    saveSettings: document.getElementById('saveSettings'),
-    mainChart: document.getElementById('mainChart')
-  };
+const state = {
+  ticker: localStorage.getItem('mp_ticker') || 'SPY',
+  range: localStorage.getItem('mp_range') || '1D',
+  url: localStorage.getItem('mp_url') || '',
+  universe: localStorage.getItem('mp_universe') || DEFAULT_UNIVERSE,
+  ranking: [],
+  market: {},
+  chart: null,
+  chartToken: 0
+};
 
-  const ctx = el.mainChart.getContext('2d');
+/* ── SETUP SCREEN ───────────────────────────────────── */
+const setupScreen = document.getElementById('setupScreen');
+const setupBtn = document.getElementById('setupBtn');
+const setupUrlInput = document.getElementById('setupUrl');
+const setupError = document.getElementById('setupError');
 
-  function setBusy(on, msg='Loading…') {
-    el.refreshBtn.disabled = on;
-    el.liveStatus.textContent = on ? msg : 'Live and ready';
-    el.statusDot.style.background = on ? 'var(--warn)' : 'var(--good)';
-    el.statusDot.style.boxShadow = on ? '0 0 0 6px rgba(255,184,77,.12)' : '0 0 0 6px rgba(49,210,125,.12)';
+function checkSetup() {
+  if (state.url && state.url.includes('script.google.com')) {
+    setupScreen.classList.add('hidden');
+    initDashboard();
   }
-  function sign(v){ return `${v >= 0 ? '+' : ''}${Number(v || 0).toFixed(2)}%`; }
-  function sparkSvg(values, up) {
-    const color = up ? '#31d27d' : '#ff6b7a';
-    const v = values && values.length ? values : [100,101,99,102,100];
-    const min = Math.min(...v), max = Math.max(...v), span = max - min || 1;
-    const pts = v.map((n,i) => [i * (110 / (v.length - 1 || 1)), 44 - (((n - min) / span) * 34) - 5]);
-    const path = pts.map((p,i) => `${i ? 'L' : 'M'} ${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(' ');
-    const area = `M 0 41 ${pts.map(p => `L ${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(' ')} L 110 41 Z`;
-    return `<svg class="mini" viewBox="0 0 110 44" preserveAspectRatio="none"><path d="${area}" fill="rgba(255,255,255,.03)"></path><path d="${path}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+}
+
+setupBtn.addEventListener('click', () => {
+  const url = setupUrlInput.value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    setupError.style.display = 'block';
+    return;
   }
-  function renderChartHeader(item) {
-    el.chartSymbol.textContent = item?.ticker || 'SPY';
-    el.chartName.textContent = item?.name || 'S&P 500 ETF';
-    el.chartPrice.textContent = item?.price ? `$${item.price.toFixed(2)}` : '—';
-    el.chartChange.textContent = item ? `${sign(item.change1D)} today` : 'Loading…';
-    el.chartChange.className = `change ${item && item.change1D >= 0 ? 'good' : 'bad'}`;
-    el.chartHint.textContent = item ? `${item.sector} • score ${item.score.toFixed(1)}` : 'Choose a ticker to load the chart.';
+  setupError.style.display = 'none';
+  state.url = url;
+  localStorage.setItem('mp_url', url);
+  setupScreen.classList.add('hidden');
+  initDashboard();
+});
+setupUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') setupBtn.click(); });
+
+/* ── HELPERS ────────────────────────────────────────── */
+function sign(v) { return `${v >= 0 ? '+' : ''}${Number(v || 0).toFixed(2)}%`; }
+
+function setStatus(mode, msg) {
+  const dot = document.getElementById('statusDot');
+  const status = document.getElementById('liveStatus');
+  const btn = document.getElementById('refreshBtn');
+  dot.className = 'dot' + (mode === 'busy' ? ' busy' : mode === 'err' ? ' err' : '');
+  status.textContent = msg;
+  btn.disabled = mode === 'busy';
+}
+
+/* ── API CALLS ──────────────────────────────────────── */
+async function apiFetch(params) {
+  const url = new URL(state.url);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/* ── RENDER FUNCTIONS ───────────────────────────────── */
+function renderKPIs(data) {
+  const top = data.topPick;
+  const mom = data.momentumPick;
+  const ranking = data.ranking || [];
+  document.getElementById('kpiTopPick').textContent = top ? top.ticker : '—';
+  document.getElementById('kpiTopPickSub').textContent = top ? `${top.name} • ${top.sector}` : 'No data';
+  document.getElementById('kpiMomentum').textContent = mom ? mom.ticker : '—';
+  document.getElementById('kpiMomentumSub').textContent = mom ? `${sign(mom.change1D)} today` : 'No data';
+  const adv = ranking.filter(x => x.change1D >= 0).length;
+  document.getElementById('kpiBreadth').textContent = ranking.length ? `${adv}/${ranking.length}` : '—';
+  document.getElementById('kpiBreadthSub').textContent = `${adv} advancers`;
+  document.getElementById('kpiUniverse').textContent = data.universeCount || 0;
+}
+
+function renderStrip(ranking) {
+  const strip = document.getElementById('tickerStrip');
+  strip.innerHTML = ranking.slice(0, 12).map(item => `
+    <button class="pill ${state.ticker === item.ticker ? 'active' : ''}" data-ticker="${item.ticker}">
+      <span class="sym">${item.ticker}</span>
+      <span class="chg ${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)}</span>
+    </button>
+  `).join('');
+  strip.querySelectorAll('.pill').forEach(b => b.addEventListener('click', () => selectTicker(b.dataset.ticker)));
+  document.getElementById('stripNote').textContent = `Top ${Math.min(ranking.length, 12)} by momentum score`;
+}
+
+function renderPickList(ranking) {
+  const el = document.getElementById('pickList');
+  if (!ranking.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--bad)">No data returned. Check Apps Script deployment.</div>`;
+    return;
   }
-  function renderMarketRows(market) {
-    const rows = [['SPY', 'S&P 500 ETF'], ['QQQ', 'NASDAQ 100 ETF'], ['IWM', 'Russell 2000 ETF']];
-    el.marketRows.innerHTML = rows.map(([sym, name]) => {
-      const item = market[sym];
-      if (!item) return `<div class="row"><div class="left"><strong>${sym}</strong><span>${name}</span></div><div class="right"><strong>—</strong><span>Loading</span></div></div>`;
-      return `<div class="row"><div class="left"><strong>${sym}</strong><span>${name}</span></div><div class="right"><strong class="${item.change1D >= 0 ? 'good' : 'bad'}">${item.price.toFixed(2)}</strong><span class="${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)} today</span></div></div>`;
-    }).join('');
-  }
-  function renderLogic(item) {
-    if (!item) {
-      el.logicBox.innerHTML = `<div class="loading skeleton" style="border-radius:16px;min-height:150px">Loading ranking logic…</div>`;
-      return;
-    }
-    el.logicBox.innerHTML = `
-      <div class="row"><div class="left"><strong>${item.ticker} — top pick</strong><span>${item.name}</span></div><div class="right"><strong class="${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)}</strong><span>1 day</span></div></div>
-      <div class="row"><div class="left"><strong>Momentum score</strong><span>Weighted from daily change and relative volume</span></div><div class="right"><strong>${item.score.toFixed(1)}</strong><span>higher is better</span></div></div>
-      <div class="row"><div class="left"><strong>Relative volume</strong><span>Compared with average volume</span></div><div class="right"><strong>${item.relVol.toFixed(1)}x</strong><span>activity</span></div></div>
-    `;
-  }
-  function renderTickerStrip(ranking) {
-    el.tickerStrip.innerHTML = ranking.slice(0,10).map(item => `
-      <button class="pill ${state.selectedTicker === item.ticker ? 'active' : ''}" data-ticker="${item.ticker}">
-        <span class="sym">${item.ticker}</span>
-        <span class="chg ${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)}</span>
-      </button>
-    `).join('');
-    document.querySelectorAll('.pill').forEach(btn => btn.addEventListener('click', () => selectTicker(btn.dataset.ticker)));
-  }
-  function renderPickList(ranking) {
-    if (!ranking.length) {
-      el.pickList.innerHTML = `<div class="error" style="border:1px solid rgba(255,107,122,.25);background:rgba(255,107,122,.08);border-radius:18px;padding:18px;color:#ffd9de"><div><strong>No stock data returned.</strong></div><div style="margin-top:8px;line-height:1.5">Check that the Apps Script web app is deployed and reachable.</div></div>`;
-      return;
-    }
-    el.pickList.innerHTML = ranking.slice(0,6).map((item, i) => `
-      <article class="pick ${state.selectedTicker === item.ticker ? 'active' : ''}" data-ticker="${item.ticker}">
-        <div class="pick-top">
-          <div>
-            <div class="rank">Rank #${i+1}</div>
-            <div class="sym">${item.ticker}</div>
-            <div class="name">${item.name}<br><span style="color:var(--muted)">${item.sector}</span></div>
-          </div>
-          <div>${sparkSvg([100,101,99,102,103,104], item.change1D >= 0)}</div>
+  el.innerHTML = ranking.slice(0, 6).map((item, i) => `
+    <div class="pick ${state.ticker === item.ticker ? 'active' : ''}" data-ticker="${item.ticker}">
+      <div class="pick-rank">Rank #${i + 1}</div>
+      <div class="pick-top">
+        <div>
+          <div class="pick-sym">${item.ticker}</div>
+          <div class="pick-name">${item.name} · ${item.sector}</div>
         </div>
-        <div class="meta">
-          <span class="tag ${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)} 1D</span>
-          <span class="tag">Score ${item.score.toFixed(1)}</span>
-          <span class="tag">Rel vol ${item.relVol.toFixed(1)}x</span>
+        <div class="pick-right">
+          <div class="pick-price">${item.price ? '$' + item.price.toFixed(2) : '—'}</div>
+          <div class="pick-chg ${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)} today</div>
         </div>
-        <div class="metrics">
-          <div class="metric"><div class="label">Price</div><div class="val">${item.price ? '$' + item.price.toFixed(2) : '—'}</div><div class="sub">current</div></div>
-          <div class="metric"><div class="label">Momentum</div><div class="val ${item.change1D >= 0 ? 'good' : 'bad'}">${item.change1D >= 0 ? 'Up' : 'Down'}</div><div class="sub">today</div></div>
-          <div class="metric"><div class="label">Worth noting</div><div class="val">${Math.round(item.score)}</div><div class="sub">ranking score</div></div>
-        </div>
-        <div class="reason">${item.reason}</div>
-      </article>
-    `).join('');
-    document.querySelectorAll('.pick').forEach(card => card.addEventListener('click', () => selectTicker(card.dataset.ticker)));
+      </div>
+      <div class="pick-meta">
+        <span class="tag ${item.change1D >= 0 ? 'good' : 'bad'}">${sign(item.change1D)} 1D</span>
+        <span class="tag neutral">Score ${item.score.toFixed(1)}</span>
+        <span class="tag">Rel Vol ${item.relVol.toFixed(1)}x</span>
+        ${item.trending ? '<span class="tag warn">🔥 Trending</span>' : ''}
+      </div>
+      <div class="pick-reason">${item.reason}</div>
+    </div>
+  `).join('');
+  el.querySelectorAll('.pick').forEach(c => c.addEventListener('click', () => selectTicker(c.dataset.ticker)));
+}
+
+function renderMarket(market) {
+  const rows = [['SPY','S&P 500'],['QQQ','NASDAQ 100'],['IWM','Russell 2000']];
+  document.getElementById('marketRows').innerHTML = rows.map(([sym, name]) => {
+    const m = market[sym];
+    if (!m) return `<div class="mkt-row"><div><div class="mkt-sym">${sym}</div><div class="mkt-name">${name}</div></div><div class="mkt-val"><div class="mkt-price">—</div></div></div>`;
+    return `<div class="mkt-row"><div><div class="mkt-sym">${sym}</div><div class="mkt-name">${name}</div></div><div class="mkt-val"><div class="mkt-price ${m.change1D >= 0 ? 'good' : 'bad'}">$${m.price.toFixed(2)}</div><div class="mkt-chg ${m.change1D >= 0 ? 'good' : 'bad'}">${sign(m.change1D)}</div></div></div>`;
+  }).join('');
+}
+
+function renderNews(news) {
+  const el = document.getElementById('newsList');
+  if (!news || !news.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:10px">No news available.</div>`;
+    return;
   }
-  function buildChart(chart) {
-    if (state.chart) state.chart.destroy();
-    state.chart = new Chart(ctx, {
-      type:'line',
-      data:{ labels: chart.points.map(p => new Date(p.t)), datasets:[{ data: chart.points.map(p => p.close), borderColor:'#7c8cff', borderWidth:2.5, pointRadius:0, tension:.28, fill:true, backgroundColor:(context) => { const chartObj = context.chart; if (!chartObj.chartArea) return 'rgba(124,140,255,.2)'; const g = chartObj.ctx.createLinearGradient(0, chartObj.chartArea.top, 0, chartObj.chartArea.bottom); g.addColorStop(0, 'rgba(124,140,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)'); return g; } }] },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false}, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(9,14,24,.96)', borderColor:'rgba(148,163,184,.2)', borderWidth:1, displayColors:false, titleColor:'#edf4ff', bodyColor:'#edf4ff', callbacks:{ label:(c) => ` $${c.parsed.y.toFixed(2)}` } } }, scales:{ x:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#8fa3bf', maxTicksLimit:6 } }, y:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#8fa3bf', callback:v => `$${Number(v).toFixed(0)}` } } } }
-    });
-  }
-  function renderChart(chart, rangeKey) {
-    const label = TIMEFRAMES[rangeKey] || TIMEFRAMES['1D'];
-    if (!chart || !chart.points || !chart.points.length) {
-      el.chartHint.textContent = 'No chart data available.';
-      el.chartPrice.textContent = '—';
-      el.chartChange.textContent = 'Data unavailable';
-      return;
+  el.innerHTML = news.slice(0, 8).map(n => `
+    <a class="news-item" href="${n.link || '#'}" target="_blank" rel="noopener">
+      <div class="news-headline">${n.title || '—'}</div>
+      <div class="news-meta"><span class="news-source">${n.source || 'Yahoo Finance'}</span> · ${n.time || ''}</div>
+    </a>
+  `).join('');
+  document.getElementById('newsHint').textContent = `News for ${state.ticker}`;
+}
+
+function renderChartHeader(item) {
+  document.getElementById('chartSymbol').textContent = item ? item.ticker : state.ticker;
+  document.getElementById('chartSym2').textContent = item ? item.ticker : state.ticker;
+  document.getElementById('chartName').textContent = item ? `${item.name} · ${item.sector}` : 'Loading…';
+  document.getElementById('chartPrice').textContent = item && item.price ? `$${item.price.toFixed(2)}` : '—';
+  document.getElementById('chartChange').textContent = item ? `${sign(item.change1D)} today` : '—';
+  document.getElementById('chartChange').className = `change ${item && item.change1D >= 0 ? 'good' : 'bad'}`;
+}
+
+function buildChart(chart) {
+  if (state.chart) { state.chart.destroy(); state.chart = null; }
+  if (!chart || !chart.points || !chart.points.length) return;
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const isUp = chart.points[chart.points.length - 1].close >= chart.points[0].close;
+  const color = isUp ? '#2de08c' : '#ff5a6e';
+  state.chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chart.points.map(p => new Date(p.t)),
+      datasets: [{
+        data: chart.points.map(p => p.close),
+        borderColor: color, borderWidth: 2.2,
+        pointRadius: 0, tension: .3, fill: true,
+        backgroundColor: (ctx2) => {
+          const c = ctx2.chart;
+          if (!c.chartArea) return color + '28';
+          const g = c.ctx.createLinearGradient(0, c.chartArea.top, 0, c.chartArea.bottom);
+          g.addColorStop(0, color + '30'); g.addColorStop(1, color + '02');
+          return g;
+        }
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(8,14,26,.96)',
+          borderColor: 'rgba(120,160,220,.15)', borderWidth: 1,
+          displayColors: false, titleColor: '#e8f2ff', bodyColor: '#e8f2ff',
+          callbacks: { label: c => ` $${c.parsed.y.toFixed(2)}` }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#7a9ab8', maxTicksLimit: 7, font: { family: 'Space Mono', size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#7a9ab8', callback: v => `$${Number(v).toFixed(0)}`, font: { family: 'Space Mono', size: 10 } } }
+      }
     }
-    const latest = chart.latest.close;
-    const prev = chart.prev ? chart.prev.close : latest;
-    const change = prev ? ((latest - prev) / prev) * 100 : 0;
-    el.chartPrice.textContent = '$' + latest.toFixed(2);
-    el.chartChange.textContent = `${sign(change)} on the latest bar`;
-    el.chartChange.className = `change ${change >= 0 ? 'good' : 'bad'}`;
-    el.chartPeriod.textContent = label.label;
-    el.chartRangeDetail.textContent = `Live data for ${label.label}`;
-    buildChart(chart);
-  }
-  function selectTicker(ticker) {
-    state.selectedTicker = ticker;
-    localStorage.setItem('mp_selected_ticker_gas', ticker);
-    document.querySelectorAll('.pick').forEach(x => x.classList.toggle('active', x.dataset.ticker === ticker));
-    document.querySelectorAll('.pill').forEach(x => x.classList.toggle('active', x.dataset.ticker === ticker));
-    renderChartHeader(state.ranking.find(x => x.ticker === ticker) || null);
-    loadChart(ticker, state.selectedRange);
-  }
-  function setRange(rangeKey) {
-    state.selectedRange = rangeKey;
-    localStorage.setItem('mp_selected_range_gas', rangeKey);
-    document.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.dataset.range === rangeKey));
-    loadChart(state.selectedTicker, rangeKey);
-  }
-  function loadChart(ticker, rangeKey) {
-    const token = ++state.loadingChartToken;
-    const pick = state.ranking.find(x => x.ticker === ticker) || null;
-    renderChartHeader(pick);
-    el.chartHint.textContent = `Loading ${ticker} chart…`;
-    google.script.run
-      .withSuccessHandler((chart) => { if (token !== state.loadingChartToken) return; renderChart(chart, rangeKey); })
-      .withFailureHandler((err) => { if (token !== state.loadingChartToken) return; console.error(err); el.chartHint.textContent = `Unable to load ${ticker} chart.`; el.chartPrice.textContent = '—'; el.chartChange.textContent = 'Data unavailable'; el.chartChange.className = 'change bad'; if (state.chart) state.chart.destroy(); })
-      .getChartData(ticker, rangeKey);
-  }
-  function refreshData() {
-    setBusy(true, 'Loading quotes…');
-    google.script.run
-      .withSuccessHandler((data) => {
-        state.ranking = data.ranking || [];
-        state.market = data.market || {};
-        renderTickerStrip(state.ranking);
-        renderPickList(state.ranking);
-        renderMarketRows(state.market);
-        renderLogic(state.ranking[0] || null);
+  });
+}
 
-        const top = data.topPick || state.ranking[0] || null;
-        const momentum = data.momentumPick || null;
-        el.kpiTopPick.textContent = top ? top.ticker : '—';
-        el.kpiTopPickSub.textContent = top ? `${top.name} • ${top.sector}` : 'No data';
-        el.kpiMomentum.textContent = momentum ? momentum.ticker : '—';
-        el.kpiMomentumSub.textContent = momentum ? `${sign(momentum.change1D)} today` : 'No data';
-        el.kpiBreadth.textContent = state.ranking.length ? `${state.ranking.filter(x => x.change1D >= 0).length}/${state.ranking.length}` : '—';
-        el.kpiBreadthSub.textContent = 'Advancers vs laggards';
-        el.kpiUniverse.textContent = data.universeCount || 0;
-        el.liveStatus.textContent = top ? `Top now: ${state.ranking.slice(0,3).map(x => x.ticker).join(', ')}` : 'No data';
-        el.lastRefresh.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-        el.scanNote.textContent = top ? `Top stock this hour: ${top.ticker}.` : 'No data.';
-        renderChartHeader(state.ranking.find(x => x.ticker === state.selectedTicker) || top || null);
-        setBusy(false);
-        if (state.selectedTicker) loadChart(state.selectedTicker, state.selectedRange);
-      })
-      .withFailureHandler((err) => {
-        console.error(err);
-        setBusy(false, 'Load failed');
-        el.pickList.innerHTML = `<div class="error" style="border:1px solid rgba(255,107,122,.25);background:rgba(255,107,122,.08);border-radius:18px;padding:18px;color:#ffd9de"><div><strong>Load failed.</strong></div><div style="margin-top:8px;line-height:1.5">Open the Apps Script execution log for the exact error. Most often the web app is not deployed correctly or Yahoo blocked the upstream request temporarily.</div></div>`;
-      })
-      .getInitialData(state.selectedTicker, state.selectedRange, DEFAULT_UNIVERSE.join(','));
+function renderChart(chart, rangeKey) {
+  if (!chart || !chart.points || !chart.points.length) {
+    document.getElementById('chartHint').textContent = 'No chart data available.';
+    document.getElementById('chartPrice').textContent = '—';
+    document.getElementById('chartChange').textContent = 'Unavailable';
+    return;
   }
-  function openSettings() {
-    el.webAppUrl.value = state.webAppUrl;
-    el.watchlistInput.value = DEFAULT_UNIVERSE.join(', ');
-    el.settingsModal.classList.add('open');
-  }
-  function closeSettings() { el.settingsModal.classList.remove('open'); }
-  function saveSettings() {
-    state.webAppUrl = el.webAppUrl.value.trim();
-    localStorage.setItem('mp_webapp_url_gas', state.webAppUrl);
-    localStorage.setItem('mp_selected_ticker_gas', state.selectedTicker);
-    localStorage.setItem('mp_selected_range_gas', state.selectedRange);
-    closeSettings();
-    refreshData();
-  }
+  const latest = chart.points[chart.points.length - 1].close;
+  const first = chart.points[0].close;
+  const change = ((latest - first) / first) * 100;
+  document.getElementById('chartPrice').textContent = `$${latest.toFixed(2)}`;
+  document.getElementById('chartChange').textContent = `${sign(change)} (${TIMEFRAMES[rangeKey] || rangeKey})`;
+  document.getElementById('chartChange').className = `change ${change >= 0 ? 'good' : 'bad'}`;
+  document.getElementById('chartPeriod').textContent = TIMEFRAMES[rangeKey] || rangeKey;
+  document.getElementById('chartRangeDetail').textContent = `${chart.points.length} data points · Yahoo Finance`;
+  document.getElementById('chartHint').textContent = `${state.ticker} · ${TIMEFRAMES[rangeKey] || rangeKey} view`;
+  buildChart(chart);
+}
 
-  document.getElementById('refreshBtn').addEventListener('click', refreshData);
-  document.getElementById('settingsBtn').addEventListener('click', openSettings);
-  document.getElementById('closeSettings').addEventListener('click', closeSettings);
-  document.getElementById('saveSettings').addEventListener('click', saveSettings);
-  document.getElementById('settingsModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeSettings(); });
-  document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => setRange(btn.dataset.range)));
+/* ── ACTIONS ────────────────────────────────────────── */
+function selectTicker(ticker) {
+  state.ticker = ticker;
+  localStorage.setItem('mp_ticker', ticker);
+  document.querySelectorAll('.pick').forEach(x => x.classList.toggle('active', x.dataset.ticker === ticker));
+  document.querySelectorAll('.pill').forEach(x => x.classList.toggle('active', x.dataset.ticker === ticker));
+  const item = state.ranking.find(x => x.ticker === ticker);
+  renderChartHeader(item || null);
+  loadChart(ticker, state.range);
+  loadNews(ticker);
+}
 
-  setBusy(true, 'Loading quotes…');
+function setRange(rangeKey) {
+  state.range = rangeKey;
+  localStorage.setItem('mp_range', rangeKey);
+  document.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.dataset.range === rangeKey));
+  loadChart(state.ticker, rangeKey);
+}
+
+async function loadChart(ticker, rangeKey) {
+  const token = ++state.chartToken;
+  try {
+    const chart = await apiFetch({ action: 'getChartData', ticker, range: rangeKey });
+    if (token !== state.chartToken) return;
+    renderChart(chart, rangeKey);
+  } catch (e) {
+    if (token !== state.chartToken) return;
+    document.getElementById('chartHint').textContent = `Chart load failed: ${e.message}`;
+  }
+}
+
+async function loadNews(ticker) {
+  document.getElementById('newsList').innerHTML = '<div class="skeleton" style="height:130px"></div>';
+  try {
+    const data = await apiFetch({ action: 'getNews', ticker });
+    renderNews(data.news || []);
+  } catch (e) {
+    document.getElementById('newsList').innerHTML = `<div style="color:var(--muted);font-size:12px;padding:10px">News unavailable.</div>`;
+  }
+}
+
+async function refreshData() {
+  setStatus('busy', 'Loading…');
+  try {
+    const data = await apiFetch({ action: 'getInitialData', ticker: state.ticker, range: state.range, universe: state.universe });
+    state.ranking = data.ranking || [];
+    state.market = data.market || {};
+    renderKPIs(data);
+    renderStrip(state.ranking);
+    renderPickList(state.ranking);
+    renderMarket(state.market);
+    const top = data.ranking[0];
+    document.getElementById('scanNote').textContent = top ? `Top pick: ${top.ticker} · Score ${top.score.toFixed(1)} · ${sign(top.change1D)} today` : 'No data.';
+    document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setStatus('ok', top ? `Top: ${state.ranking.slice(0, 3).map(x => x.ticker).join(', ')}` : 'Loaded');
+    const item = state.ranking.find(x => x.ticker === state.ticker) || top;
+    if (item) renderChartHeader(item);
+    loadChart(state.ticker, state.range);
+    loadNews(state.ticker);
+  } catch (e) {
+    setStatus('err', 'Load failed');
+    document.getElementById('pickList').innerHTML = `<div style="padding:20px;color:var(--bad);font-size:13px;line-height:1.6"><strong>Load failed.</strong><br>Error: ${e.message}<br><br>Check that your Apps Script web app is deployed correctly and try again.</div>`;
+  }
+}
+
+/* ── SETTINGS MODAL ──────────────────────────────────── */
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  document.getElementById('settingsUrl').value = state.url;
+  document.getElementById('settingsUniverse').value = state.universe;
+  document.getElementById('settingsModal').classList.add('open');
+});
+document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsModal').classList.remove('open'));
+document.getElementById('settingsModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.target.classList.remove('open'); });
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  const url = document.getElementById('settingsUrl').value.trim();
+  const universe = document.getElementById('settingsUniverse').value.trim();
+  if (url) { state.url = url; localStorage.setItem('mp_url', url); }
+  if (universe) { state.universe = universe; localStorage.setItem('mp_universe', universe); }
+  document.getElementById('settingsModal').classList.remove('open');
   refreshData();
-  setInterval(refreshData, 5 * 60 * 1000);
+});
+
+/* ── RANGE BUTTONS ──────────────────────────────────── */
+document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => setRange(btn.dataset.range)));
+
+/* ── REFRESH BUTTON ─────────────────────────────────── */
+document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+/* ── INIT ───────────────────────────────────────────── */
+function initDashboard() {
+  document.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.dataset.range === state.range));
+  refreshData();
+  setInterval(refreshData, 5 * 60 * 1000); // auto-refresh every 5 min
+}
+
+checkSetup(); // show setup screen or go straight to dashboard
 </script>
 </body>
 </html>
