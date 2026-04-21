@@ -291,12 +291,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   /* Mobile mode switching */
   body.mobile-dashboard #header,
   body.mobile-dashboard #alert-bar,
-  body.mobile-dashboard #statbar,
+  body.mobile-dashboard #statbar{display:flex}
   body.mobile-dashboard #main{display:none}
-  body.mobile-content #header{display:none}
+  body.mobile-content #header,
   body.mobile-content #alert-bar,
-  body.mobile-content #statbar{display:flex}
-  body.mobile-content #main{display:flex}
+  body.mobile-content #statbar{display:none}
+  body.mobile-content #main{display:block}
 
   /* Compact header */
   #header{height:42px;padding:6px 10px;gap:6px}
@@ -399,12 +399,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   :root{--mob-nav-h:44px;--mobile-header-h:36px}
   body.mobile-dashboard #header,
   body.mobile-dashboard #alert-bar,
-  body.mobile-dashboard #statbar,
+  body.mobile-dashboard #statbar{display:flex}
   body.mobile-dashboard #main{display:none}
-  body.mobile-content #header{display:none}
+  body.mobile-content #header,
   body.mobile-content #alert-bar,
-  body.mobile-content #statbar{display:flex}
-  body.mobile-content #main{display:flex}
+  body.mobile-content #statbar{display:none}
+  body.mobile-content #main{display:block}
   #header{height:36px;padding:4px 8px;gap:5px}
   #alert-bar{height:20px}
   #statbar{height:32px}
@@ -977,9 +977,9 @@ function switchMobilePanel(panel) {
   // Update mobile-only chrome
   document.body.classList.toggle('mobile-dashboard', panel === 'dashboard');
   document.body.classList.toggle('mobile-content', panel !== 'dashboard');
-  document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? ('42px') : '0px');
+  document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? '42px' : '0px');
   if (window.matchMedia('(max-width:900px) and (max-height:480px)').matches) {
-    document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? ('36px') : '0px');
+    document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? '36px' : '0px');
   }
 
   // Update panel visibility
