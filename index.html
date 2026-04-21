@@ -284,9 +284,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
 
 /* ══ MOBILE PORTRAIT (≤600px) ═══════════════════════════════════ */
 @media(max-width:600px){
-  :root{--mob-nav-h:52px}
+  :root{--mob-nav-h:52px;--mobile-header-h:42px}
 
   html,body{overflow:hidden;height:100%;height:100dvh}
+
+  /* Mobile mode switching */
+  body.mobile-dashboard #header,
+  body.mobile-dashboard #alert-bar,
+  body.mobile-dashboard #statbar,
+  body.mobile-dashboard #main{display:none}
+  body.mobile-content #header{display:none}
+  body.mobile-content #alert-bar,
+  body.mobile-content #statbar{display:flex}
+  body.mobile-content #main{display:flex}
 
   /* Compact header */
   #header{height:42px;padding:6px 10px;gap:6px}
@@ -314,7 +324,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   /* Main container: full height minus nav */
   #main{
     display:block;
-    height:calc(100dvh - 42px - 22px - 42px - var(--mob-nav-h));
+    height:calc(100dvh - var(--mobile-header-h) - 22px - 42px - var(--mob-nav-h));
     overflow:hidden;
     position:relative;
   }
@@ -386,7 +396,15 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
 
 /* ══ MOBILE LANDSCAPE (short + narrow) ═══════════════════════════ */
 @media(max-width:900px) and (max-height:480px){
-  :root{--mob-nav-h:44px}
+  :root{--mob-nav-h:44px;--mobile-header-h:36px}
+  body.mobile-dashboard #header,
+  body.mobile-dashboard #alert-bar,
+  body.mobile-dashboard #statbar,
+  body.mobile-dashboard #main{display:none}
+  body.mobile-content #header{display:none}
+  body.mobile-content #alert-bar,
+  body.mobile-content #statbar{display:flex}
+  body.mobile-content #main{display:flex}
   #header{height:36px;padding:4px 8px;gap:5px}
   #alert-bar{height:20px}
   #statbar{height:32px}
@@ -394,7 +412,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   .stat-val{font-size:10px}
   .stat-sub{display:none}
   .mobile-dash-btn{display:inline-flex;align-items:center;justify-content:center;flex:1;min-width:0}
-  #main{height:calc(100dvh - 36px - 20px - 32px - var(--mob-nav-h));display:block;overflow:hidden;position:relative}
+  #main{height:calc(100dvh - var(--mobile-header-h) - 20px - 32px - var(--mob-nav-h));display:block;overflow:hidden;position:relative}
   #left-panel,#center-panel,#right-panel{position:absolute;inset:0;width:100% !important;height:100% !important;border:none !important;display:none;flex-direction:column}
   #left-panel.mob-active{display:flex}
   #center-panel.mob-active{display:flex}
@@ -405,7 +423,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   #trade-bar{padding:3px 8px}
   #bottom-bar{display:none}
   #mobile-nav{display:flex;height:44px}
-  .mob-nav-btn{padding:4px 4px 2px}
+  .mob-nav-btn{padding:4px 3px 2px}
   .mob-nav-icon{font-size:15px}
   .mob-nav-label{font-size:7px}
   #toast{bottom:calc(44px + 6px)}
@@ -427,7 +445,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
     Market<span style="color:var(--green)">Tracker</span>
     <span class="logo-text-sub" style="color:var(--txt3);font-weight:300;font-size:10px">· Daily Picks</span>
   </div>
-  <button class="hbtn primary mobile-dash-btn" onclick="switchMobilePanel('picks')">🏠 Dashboard</button>
   <div id="live-badge"><div id="live-dot" class="loading"></div><span id="live-txt">Starting…</span></div>
   <div id="mps-wrap">
     <span id="mps-lbl">MPS</span>
@@ -569,7 +586,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
 
 <!-- MOBILE BOTTOM NAV -->
 <nav id="mobile-nav">
-  <button class="mob-nav-btn active" id="mnav-picks" onclick="switchMobilePanel('picks')">
+  <button class="mob-nav-btn active" id="mnav-dashboard" onclick="switchMobilePanel('dashboard')">
+    <span class="mob-nav-icon">🏠</span>
+    <span class="mob-nav-label">Dash</span>
+  </button>
+  <button class="mob-nav-btn" id="mnav-picks" onclick="switchMobilePanel('picks')">
     <span class="mob-nav-icon">🎯</span>
     <span class="mob-nav-label">Picks</span>
   </button>
@@ -924,7 +945,7 @@ const S = {
     loggedIn: false,
     watchlistLoaded: false,
   },
-  mobilePanel: 'picks', // picks | chart | analysis
+  mobilePanel: 'dashboard', // dashboard | picks | chart | analysis
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -946,12 +967,21 @@ function isMobile() {
 
 function initMobileNav() {
   if (!isMobile()) return;
-  switchMobilePanel('picks');
+  switchMobilePanel('dashboard');
 }
 
 function switchMobilePanel(panel) {
   if (!isMobile()) return;
   S.mobilePanel = panel;
+
+  // Update mobile-only chrome
+  document.body.classList.toggle('mobile-dashboard', panel === 'dashboard');
+  document.body.classList.toggle('mobile-content', panel !== 'dashboard');
+  document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? ('42px') : '0px');
+  if (window.matchMedia('(max-width:900px) and (max-height:480px)').matches) {
+    document.documentElement.style.setProperty('--mobile-header-h', panel === 'dashboard' ? ('36px') : '0px');
+  }
+
   // Update panel visibility
   document.getElementById('left-panel').classList.remove('mob-active');
   document.getElementById('center-panel').classList.remove('mob-active');
@@ -959,11 +989,13 @@ function switchMobilePanel(panel) {
   if (panel === 'picks') document.getElementById('left-panel').classList.add('mob-active');
   else if (panel === 'chart') document.getElementById('center-panel').classList.add('mob-active');
   else if (panel === 'analysis') document.getElementById('right-panel').classList.add('mob-active');
+
   // Update nav buttons
-  ['picks','chart','analysis','account'].forEach(p => {
+  ['dashboard','picks','chart','analysis','account'].forEach(p => {
     const btn = document.getElementById('mnav-' + p);
     if (btn) btn.classList.toggle('active', p === panel);
   });
+
   // Load news when switching to analysis
   if (panel === 'analysis' && (!S.allNews || !S.allNews.length)) {
     loadNewsFallback().catch(()=>{});
