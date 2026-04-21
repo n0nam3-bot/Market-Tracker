@@ -298,6 +298,40 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   body.mobile-content #statbar{display:none}
   body.mobile-content #main{display:block}
 
+  /* Dashboard fills the mobile screen better */
+  body.mobile-dashboard #header{
+    height:auto;
+    min-height:clamp(88px, 22dvh, 150px);
+    padding:10px 10px 8px;
+    gap:8px;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    align-items:flex-start;
+  }
+  body.mobile-dashboard #header .logo{width:100%;font-size:15px}
+  body.mobile-dashboard #header .logo-text-sub{display:inline}
+  body.mobile-dashboard #header .spacer{display:none}
+  body.mobile-dashboard #header #mps-wrap{display:flex;width:100%;order:2;justify-content:space-between;padding:5px 8px}
+  body.mobile-dashboard #header #time-wrap{display:flex;width:100%;order:3;justify-content:flex-end;text-align:right}
+  body.mobile-dashboard #header #live-badge{order:4;padding:3px 6px}
+  body.mobile-dashboard #header .hbtn{display:inline-flex;font-size:10px;padding:7px 9px;flex:1 1 calc(50% - 4px);min-width:0}
+  body.mobile-dashboard #header .hbtn.primary{flex:1 1 100%}
+  body.mobile-dashboard .mobile-dash-btn{display:none}
+
+  body.mobile-dashboard #alert-bar{height:clamp(24px, 6dvh, 34px)}
+  body.mobile-dashboard #alert-lbl{font-size:8px;padding:0 8px}
+  body.mobile-dashboard .alert-item{font-size:9px;padding:0 8px}
+
+  body.mobile-dashboard #statbar{
+    height:auto;
+    min-height:clamp(108px, 28dvh, 170px);
+    flex-wrap:wrap;
+  }
+  body.mobile-dashboard .stat-cell{min-width:33.333%;flex:1 1 33.333%;padding:10px 8px}
+  body.mobile-dashboard .stat-val{font-size:14px}
+  body.mobile-dashboard .stat-lbl{font-size:7px}
+  body.mobile-dashboard .stat-sub{font-size:8px}
+
   /* Compact header */
   #header{height:42px;padding:6px 10px;gap:6px}
   .logo-text-sub{display:none}
@@ -305,7 +339,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   #time-wrap{display:none}
   #live-badge{padding:2px 5px}
   .hbtn{font-size:9px;padding:3px 6px}
-  .mobile-dash-btn{display:inline-flex;align-items:center;justify-content:center;flex:1;min-width:0}
+  .mobile-dash-btn{display:none}
   /* Hide Settings/Account/Watchlist text labels on tiny screens, keep Refresh */
   .hbtn:not(.primary):not(.mobile-dash-btn){display:none}
 
@@ -372,7 +406,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   .ptag{font-size:8px;padding:2px 5px}
 
   /* Right panel */
-  #rtab-bar{display:flex !important;height:34px;flex-shrink:0}
+  #rtab-bar{display:none !important}
   .rtab{font-size:9px;padding:5px 4px}
   #right-content{padding:8px}
   .news-title{font-size:11px}
@@ -405,13 +439,34 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   body.mobile-content #alert-bar,
   body.mobile-content #statbar{display:none}
   body.mobile-content #main{display:block}
+  body.mobile-dashboard #header{
+    height:auto;
+    min-height:clamp(70px, 20dvh, 120px);
+    padding:8px 8px 6px;
+    gap:6px;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    align-items:flex-start;
+  }
+  body.mobile-dashboard #header .logo{width:100%}
+  body.mobile-dashboard #header .spacer{display:none}
+  body.mobile-dashboard #header #mps-wrap{display:flex;width:100%;order:2;justify-content:space-between;padding:4px 6px}
+  body.mobile-dashboard #header #time-wrap{display:flex;width:100%;order:3;justify-content:flex-end}
+  body.mobile-dashboard #header #live-badge{order:4;padding:2px 5px}
+  body.mobile-dashboard #header .hbtn{display:inline-flex;font-size:9px;padding:6px 8px;flex:1 1 calc(50% - 3px);min-width:0}
+  body.mobile-dashboard #header .hbtn.primary{flex:1 1 100%}
+  body.mobile-dashboard .mobile-dash-btn{display:none}
+  body.mobile-dashboard #alert-bar{height:clamp(22px, 6dvh, 30px)}
+  body.mobile-dashboard #statbar{height:auto;min-height:clamp(88px, 22dvh, 135px);flex-wrap:wrap}
+  body.mobile-dashboard .stat-cell{min-width:33.333%;flex:1 1 33.333%;padding:8px 6px}
+  body.mobile-dashboard .stat-val{font-size:13px}
+  body.mobile-dashboard .stat-sub{font-size:7px}
   #header{height:36px;padding:4px 8px;gap:5px}
   #alert-bar{height:20px}
   #statbar{height:32px}
   .stat-cell{padding:3px 7px;min-width:55px}
   .stat-val{font-size:10px}
   .stat-sub{display:none}
-  .mobile-dash-btn{display:inline-flex;align-items:center;justify-content:center;flex:1;min-width:0}
   #main{height:calc(100dvh - var(--mobile-header-h) - 20px - 32px - var(--mob-nav-h));display:block;overflow:hidden;position:relative}
   #left-panel,#center-panel,#right-panel{position:absolute;inset:0;width:100% !important;height:100% !important;border:none !important;display:none;flex-direction:column}
   #left-panel.mob-active{display:flex}
@@ -421,6 +476,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   .range-btn{padding:3px 4px;font-size:8px}
   #sector-wrap{height:26px;padding:2px 6px}
   #trade-bar{padding:3px 8px}
+  #rtab-bar{display:none !important}
+  #rv-analysis{display:block !important}
+  #rv-market,#rv-news{display:none !important}
   #bottom-bar{display:none}
   #mobile-nav{display:flex;height:44px}
   .mob-nav-btn{padding:4px 3px 2px}
