@@ -756,7 +756,7 @@ const S = {
   refreshMs:parseInt(localStorage.getItem('refreshMs') || '300000'),
   watchlist:JSON.parse(localStorage.getItem('watchlist') || 'null') || [...DEFAULT_WL],
   purchasePrices:JSON.parse(localStorage.getItem('purchasePrices') || '{}'),
-  quotes:{}, allNews:[],
+  quotes:{}, allNews:[], universe:[], universeLoaded:false,
   picks:{ top:[], hr:[], wl:[], tr:[] },
   activeTab:'top', activeRtab:'analysis', newsFilter:'all',
   chart:{ ticker:null, range:'D' },
@@ -765,7 +765,7 @@ const S = {
   alerts:[], sectorPerf:{}, mps:50,
 };
 
-document.addEventListener('DOMContentLoaded', () => { applySettings(); refresh(); startAutoRefresh(); });
+document.addEventListener('DOMContentLoaded', () => { applySettings(); const uc=loadUniverseCache(); if (uc && uc.data) { S.universe = uc.data; S.universeLoaded = true; } refresh(); startAutoRefresh(); });
 
 function applySettings() {
   document.getElementById('api-key-input').value  = S.apiKey;
@@ -806,6 +806,24 @@ function loadNewsCache() {
   } catch(e) { return null; }
 }
 
+const UNIVERSE_KEY = 'mp_universe_v1';
+const UNIVERSE_TTL  = 24 * 60 * 60 * 1000;  // 1 day
+
+function saveUniverseCache(list) {
+  try {
+    localStorage.setItem(UNIVERSE_KEY, JSON.stringify({ data: list, ts: Date.now() }));
+  } catch(e) {}
+}
+function loadUniverseCache() {
+  try {
+    const raw = localStorage.getItem(UNIVERSE_KEY);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    const age = Date.now() - ts;
+    return { data, age, fresh: age < UNIVERSE_TTL };
+  } catch(e) { return null; }
+}
+
 // ════════════════════════════════════════════════════════
 // REFRESH
 // ════════════════════════════════════════════════════════
@@ -842,11 +860,14 @@ async function refresh(background=false) {
 
   setStatus('Fetching live data…', 'loading');
   try {
-    // Single request for all quotes (no URL-length issues, no batching needed)
-    const [quotesData, newsData] = await Promise.all([
+    // Pull quotes, news, and the broad universe independently.
+    const [quotesData, newsData, universeData] = await Promise.all([
       fetchAllQuotes(),
-      fetchNews(S.watchlist.slice(0, 5).join(','))
+      fetchNews(S.watchlist.slice(0, 5).join(',')),
+      fetchUniverse()
     ]);
+
+    const cachedNews = loadNewsCache();
 
     if (!quotesData.length && !cached) {
       // Sheet not populated yet
@@ -857,8 +878,12 @@ async function refresh(background=false) {
 
     hideSetupBanner();
     quotesData.forEach(q => { S.quotes[q.symbol] = q; });
-    S.allNews = newsData;
-    saveCache(quotesData, newsData);
+    if (universeData && universeData.length) {
+      S.universe = universeData;
+      S.universeLoaded = true;
+    }
+    S.allNews = (newsData && newsData.length) ? newsData : (cachedNews ? cachedNews.data : []);
+    saveCache(quotesData, S.allNews);
 
     // Merge watchlist tickers not in universe (fetch on-demand if needed)
     const wlMissing = S.watchlist.filter(s => !S.quotes[s]);
@@ -876,7 +901,7 @@ async function refresh(background=false) {
     calcSectorPerf(); calcMPS(spyChg); buildAlerts();
 
     renderStats(); renderPicks(); renderAlertBar();
-    renderSectorHeatmap(); renderMarketOverview(); renderNews(newsData);
+    renderSectorHeatmap(); renderMarketOverview(); renderNews(S.allNews);
 
     if (S.chart.ticker && S.quotes[S.chart.ticker]) {
       updateTradeDisplay(S.chart.ticker);
@@ -930,6 +955,32 @@ async function fetchNews(symsStr) {
     const data = await res.json();
     return (data && data.articles) || [];
   } catch { return []; }
+}
+
+async function fetchUniverse() {
+  const cached = loadUniverseCache();
+  if (cached && cached.data && cached.data.length) {
+    S.universe = cached.data;
+    S.universeLoaded = true;
+    return cached.data;
+  }
+  if (!S.gasUrl) return [];
+  try {
+    const res = await fetch(S.gasUrl + '?action=universe&_=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const list = (data && (data.tickers || data.universe || data.result)) || [];
+    const norm = [...new Set(list.map(s => String(s || '').trim().toUpperCase()).filter(Boolean))];
+    if (norm.length) {
+      S.universe = norm;
+      S.universeLoaded = true;
+      saveUniverseCache(norm);
+      return norm;
+    }
+  } catch(e) {
+    console.warn('Universe fetch failed', e);
+  }
+  return [];
 }
 
 // Initialize the GOOGLEFINANCE sheet (one-time setup)
@@ -1284,7 +1335,7 @@ function renderStats() {
   document.getElementById('st-breadth').textContent = `${ups}↑ ${dns}↓`;
   document.getElementById('st-breadth').className   = 'stat-val '+(ups>dns?'up':'dn');
   document.getElementById('st-breadth-s').textContent = `${Math.round(ups/(ups+dns||1)*100)}% positive`;
-  const univCount = Object.keys(S.quotes).filter(s => UNIVERSE.includes(s)).length;
+  const univCount = (S.universe && S.universe.length) ? S.universe.length : Object.keys(S.quotes).filter(s => UNIVERSE.includes(s)).length;
   document.getElementById('st-univ').textContent = univCount;
   document.getElementById('st-univ-s').textContent = `${S.watchlist.filter(s => S.quotes[s]).length} watching`;
   if (spy) {
@@ -1325,6 +1376,9 @@ async function loadChartFromSearch() {
     try {
       const extra = await fetchSpecific([v]);
       extra.forEach(q => { S.quotes[q.symbol] = q; });
+      if (extra.length === 0) {
+        setStatus('No local quote — using public fallback', 'loading');
+      }
     } catch(e) { console.warn('On-demand fetch failed', e); }
     setStatus('Live', 'live');
   }
@@ -1358,7 +1412,8 @@ function onSearchInput() {
   const val = document.getElementById('chart-search').value.trim().toUpperCase();
   const dd = document.getElementById('search-dropdown');
   if (!val) { dd.style.display='none'; return; }
-  const matches = ALL_TICKERS.filter(t => t.startsWith(val) || t.includes(val))
+  const pool = (S.universe && S.universe.length) ? Array.from(new Set([...ALL_TICKERS, ...S.universe])) : ALL_TICKERS;
+  const matches = pool.filter(t => t.startsWith(val) || t.includes(val))
     .sort((a,b) => {
       const aStart = a.startsWith(val)?0:1, bStart = b.startsWith(val)?0:1;
       if (aStart !== bStart) return aStart-bStart;
@@ -1499,7 +1554,7 @@ function updateTradeDisplay(ticker) {
 // ════════════════════════════════════════════════════════
 function triggerAnalysis(ticker) {
   const q = S.quotes[ticker];
-  const news = S.allNews.filter(n => !n.ticker || n.ticker === ticker).slice(0, 5);
+  const news = (S.allNews || []).filter(n => !n.ticker || n.ticker === ticker).slice(0, 5);
   S.currentNews = news;
   renderSelectedStockNews();
   if (q) {
@@ -1697,8 +1752,13 @@ function renderNews(articles) {
   const el = document.getElementById('news-list');
   if (!el) return;
   if (!articles || !articles.length) {
-    el.innerHTML = '<div style="color:var(--txt3);font-size:10px;font-family:var(--font-mono)">No headlines</div>';
-    return;
+    const cached = loadNewsCache();
+    if (cached && cached.data && cached.data.length) {
+      articles = cached.data;
+    } else {
+      el.innerHTML = '<div style="color:var(--txt3);font-size:10px;font-family:var(--font-mono)">No headlines</div>';
+      return;
+    }
   }
   let filtered = articles
     .map(a => ({ ...a, _sent: sentimentScore(a.title), _ts: a.pubDate ? new Date(a.pubDate).getTime() : 0 }))
