@@ -291,7 +291,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   <div class="spacer"></div>
   <div id="time-wrap"><span id="last-t">—</span> · next <span id="next-t">—</span></div>
   <button class="hbtn" onclick="showSettings()">⚙ Settings</button>
-  <button class="hbtn" onclick="showAccount()">👤 Account</button>
   <button class="hbtn" onclick="showWatchlist()">☰ Watchlist</button>
   <button class="hbtn primary" onclick="manualRefresh()">↻ Refresh</button>
 </div>
@@ -428,42 +427,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
   <span>Yahoo Finance · TradingView · Free &amp; Open · v3.0</span>
 </div>
 
-
-<!-- ACCOUNT MODAL -->
-<div class="modal-bg" id="account-modal">
-  <div class="modal">
-    <div class="modal-header">👤 Account<button class="modal-close" onclick="closeModal('account-modal')">✕</button></div>
-    <div class="modal-body">
-      <div class="ss-sec">
-        <div class="ss-title">Create / Sign in</div>
-        <div class="fg">
-          <label class="fl">Username</label>
-          <input id="acct-user-input" type="text" class="fi" placeholder="username" autocomplete="username"/>
-          <div class="fh">Letters, numbers, underscore, dot, or dash.</div>
-        </div>
-        <div class="fg">
-          <label class="fl">Password</label>
-          <input id="acct-pass-input" type="password" class="fi" placeholder="minimum 4 characters" autocomplete="current-password"/>
-          <div class="fh">Passwords are stored as a salted hash in Google Sheets.</div>
-        </div>
-        <div class="fg">
-          <label class="fl">Saved watchlist</label>
-          <textarea id="acct-wl-input" class="fi fta" placeholder="Sign in to load your watchlist"></textarea>
-          <div class="fh">Your watchlist can sync across devices once you sign in.</div>
-        </div>
-        <div id="acct-status" style="font-size:10px;font-family:var(--font-mono);color:var(--txt3);margin-top:4px">Not signed in.</div>
-      </div>
-    </div>
-    <div class="modal-footer" style="flex-wrap:wrap">
-      <button class="btn-c" onclick="logoutAccount()">Logout</button>
-      <button class="btn-c" onclick="loadAccount()">Load</button>
-      <button class="btn-c" onclick="saveAccountWatchlist()">Save Watchlist</button>
-      <button class="btn-s" onclick="registerAccount()">Create Account</button>
-      <button class="btn-s" onclick="loginAccount()">Sign In</button>
-    </div>
-  </div>
-</div>
-
 <!-- WATCHLIST MODAL -->
 <div class="modal-bg" id="watchlist-modal">
   <div class="modal">
@@ -509,18 +472,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
         </div>
       </div>
       <div class="ss-sec">
-        <div class="ss-title">📊 Google Apps Script (Required for data)</div>
-        <div class="fg">
-          <label class="fl">GAS Web App URL</label>
-          <input id="gas-url-input" type="text" class="fi" placeholder="https://script.google.com/macros/s/…/exec"/>
-          <div class="fh" style="line-height:1.8">
-            <strong style="color:var(--txt2)">First-time setup:</strong><br>
-            1. Go to <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New project<br>
-            2. Paste the <strong>Code.gs</strong> file contents → change <code>SS_ID</code> to your Google Sheet ID<br>
-            3. Deploy → New deployment → Web App → Execute as: <em>Me</em> → Access: <em>Anyone</em><br>
-            4. Copy the <code>/exec</code> URL here → Save → click <strong>Initialize Data Sheet</strong><br>
-            5. Wait ~60 seconds for GOOGLEFINANCE to populate, then Refresh
-          </div>
+        <div class="ss-title">📊 Google Apps Script</div>
+        <div class="fh" style="line-height:1.8">
+          The data endpoint is hardcoded in the app. Use <strong>Initialize Data Sheet</strong> if you need to rebuild the sheet.
         </div>
       </div>
     </div>
@@ -537,6 +491,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fo
 // ════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbww7FOVnE_DaNLhTZk9h9J_KP8349xBLuLdPm2KiSAhQGFb2BMdXncDatPSyqOj2eD5/exec';
+
 const UNIVERSE = [
   // Mega-cap
   'AAPL','MSFT','NVDA','AMZN','META','GOOGL','GOOG','TSLA','AVGO','LLY',
@@ -766,7 +722,7 @@ const TICKER_NAMES = {
 };
 
 const DEFAULT_WL  = ['AAPL','MSFT','NVDA','TSLA','AMZN','META','PLTR','AMD'];
-const MKT_TICKERS = ['SPY','QQQ','IWM'];
+const MKT_TICKERS = ['SPY','QQQ','IWM','VOO','DIA'];
 const ETF_SKIP    = ['SPY','QQQ','IWM','DIA','VTI','VOO','GLD','TLT','SLV','USO','HYG','LQD',
                      'XLK','XLF','XLV','XLE','XLY','XLI','XLB','XLC','XLU','XLRE',
                      'ARKK','ARKG','ARKW','ARKF','ARKQ','SOXL','SOXS','TQQQ','SQQQ','SPXL','SPXS','UVXY','VXX'];
@@ -788,7 +744,7 @@ const SECTOR_MAP = {
 // STATE
 // ════════════════════════════════════════════════════════
 const S = {
-  gasUrl:   localStorage.getItem('gasUrl')   || 'https://script.google.com/macros/s/AKfycbww7FOVnE_DaNLhTZk9h9J_KP8349xBLuLdPm2KiSAhQGFb2BMdXncDatPSyqOj2eD5/exec',
+  gasUrl:   GAS_WEB_APP_URL,
   apiKey:   localStorage.getItem('apiKey')   || '',
   refreshMs:parseInt(localStorage.getItem('refreshMs') || '300000'),
   watchlist:JSON.parse(localStorage.getItem('watchlist') || 'null') || [...DEFAULT_WL],
@@ -800,16 +756,14 @@ const S = {
   currentAnalysis:null, currentNews:[],
   refreshTimer:null, syncing:false,
   alerts:[], sectorPerf:{}, mps:50,
-  account:{ username:localStorage.getItem('accountUsername')||'', token:localStorage.getItem('accountToken')||'', loggedIn:false, watchlistLoaded:false },
 };
 
-document.addEventListener('DOMContentLoaded', () => { applySettings(); syncAccountUi(); if (S.account.token || S.account.username) { loadAccount(true).catch(()=>{}); } refresh(); startAutoRefresh(); });
+document.addEventListener('DOMContentLoaded', () => { applySettings(); refresh(); startAutoRefresh(); });
 
 function applySettings() {
   document.getElementById('api-key-input').value  = S.apiKey;
   document.getElementById('refresh-select').value = String(S.refreshMs);
   document.getElementById('wl-input').value        = S.watchlist.join(', ');
-  document.getElementById('gas-url-input').value   = S.gasUrl;
 }
 
 // ════════════════════════════════════════════════════════
@@ -883,7 +837,7 @@ async function refresh(background=false) {
     // Single request for all quotes (no URL-length issues, no batching needed)
     const [quotesData, newsData] = await Promise.all([
       fetchAllQuotes(),
-      fetchNews(S.watchlist.slice(0, 5).join(','))
+      fetchNews([...new Set([S.chart.ticker, ...S.watchlist.slice(0, 3)])].filter(Boolean).join(','))
     ]);
 
     if (!quotesData.length && !cached) {
@@ -1702,13 +1656,13 @@ HOLD: [suggested hold period]`;
 // MARKET + NEWS
 // ════════════════════════════════════════════════════════
 function renderMarketOverview() {
-  const lbls={SPY:'S&P 500',VOO:'Vanguard S&P 500',QQQ:'Nasdaq 100',IWM:'Russell 2000'};
-  document.getElementById('market-overview').innerHTML = ['SPY','VOO','QQQ','IWM'].map(sym => {
+  const lbls={SPY:'S&P 500',QQQ:'Nasdaq 100',IWM:'Russell 2000',VOO:'Vanguard S&P 500',DIA:'Dow Jones ETF'};
+  document.getElementById('market-overview').innerHTML = MKT_TICKERS.map(sym => {
     const q=S.quotes[sym]; if(!q)return'';
     const c=q.regularMarketChangePercent||0, cls=c>=0?'up':'dn';
     const wkH=q.fiftyTwoWeekHigh||q.regularMarketPrice, wkL=q.fiftyTwoWeekLow||0;
     const pos=(wkH-wkL)>0?((q.regularMarketPrice-wkL)/(wkH-wkL)*100):50;
-    return `<div class="mkt-row"><div><div class="mkt-sym">${sym}</div><div class="mkt-lbl">${lbls[sym]}</div></div>
+    return `<div class="mkt-row"><div><div class="mkt-sym">${sym}</div><div class="mkt-lbl">${lbls[sym]||sym}</div></div>
       <div style="text-align:right"><div class="mkt-price ${cls}">$${fmt2(q.regularMarketPrice)}</div><div class="mkt-chg ${cls}">${c>=0?'+':''}${fmt2(c)}%</div></div></div>
       <div class="mkt-bar-wrap"><div class="mkt-bar" style="width:${pos.toFixed(0)}%;background:${c>=0?'var(--green)':'var(--red)'}"></div></div>`;
   }).join('');
@@ -1775,155 +1729,14 @@ async function syncToSheets() {
 // ════════════════════════════════════════════════════════
 // MODALS
 // ════════════════════════════════════════════════════════
-function showAccount() {
-  document.getElementById('acct-user-input').value = S.account.username || localStorage.getItem('accountUsername') || '';
-  document.getElementById('acct-pass-input').value = '';
-  document.getElementById('acct-wl-input').value = S.watchlist.join(', ');
-  syncAccountUi();
-  document.getElementById('account-modal').classList.add('open');
-}
-function syncAccountUi() {
-  const el = document.getElementById('acct-status');
-  if (!el) return;
-  if (S.account.loggedIn && S.account.username) el.textContent = `Signed in as ${S.account.username}`;
-  else if (S.account.username) el.textContent = `Saved username: ${S.account.username}`;
-  else el.textContent = 'Not signed in.';
-}
-function setAccountState(username, token) {
-  S.account.username = username || '';
-  S.account.token = token || '';
-  S.account.loggedIn = !!(username && token);
-  S.account.watchlistLoaded = true;
-  localStorage.setItem('accountUsername', S.account.username);
-  localStorage.setItem('accountToken', S.account.token);
-  syncAccountUi();
-}
-function clearAccountState() {
-  S.account.username = '';
-  S.account.token = '';
-  S.account.loggedIn = false;
-  S.account.watchlistLoaded = false;
-  localStorage.removeItem('accountUsername');
-  localStorage.removeItem('accountToken');
-  syncAccountUi();
-}
-async function accountApi(action, payload={}) {
-  if (!S.gasUrl) throw new Error('Set your Google Apps Script URL first');
-  const res = await fetch(S.gasUrl, {
-    method: 'POST',
-    body: JSON.stringify({ action, ...payload })
-  });
-  const data = await res.json();
-  if (data && data.success === false) throw new Error(data.error || 'Account request failed');
-  if (data && data.error) throw new Error(data.error);
-  return data;
-}
-function normalizeUsername() { return document.getElementById('acct-user-input').value.trim(); }
-function normalizePassword() { return document.getElementById('acct-pass-input').value; }
-function getWatchlistFromText(text) {
-  return (text || '').split(/[\s,]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
-}
-async function registerAccount() {
-  const username = normalizeUsername();
-  const password = normalizePassword();
-  if (!username) { toast('Enter a username', 'err'); return; }
-  if (!/^[A-Za-z0-9_.-]{3,20}$/.test(username)) { toast('Username must be 3-20 chars', 'err'); return; }
-  if (!password || password.length < 4) { toast('Password must be at least 4 characters', 'err'); return; }
-  const parsed = getWatchlistFromText(document.getElementById('acct-wl-input').value);
-  const watchlist = parsed.length ? parsed : S.watchlist;
-  try {
-    const data = await accountApi('accountRegister', { username, password, watchlist });
-    setAccountState(data.username || username, data.token || '');
-    if (Array.isArray(data.watchlist) && data.watchlist.length) {
-      S.watchlist = data.watchlist;
-      localStorage.setItem('watchlist', JSON.stringify(S.watchlist));
-    }
-    document.getElementById('wl-input').value = S.watchlist.join(', ');
-    document.getElementById('acct-wl-input').value = S.watchlist.join(', ');
-    toast('Account created', 'ok');
-    closeModal('account-modal');
-    refresh();
-  } catch (err) { toast(err.message || 'Could not create account', 'err'); }
-}
-async function loginAccount() {
-  const username = normalizeUsername();
-  const password = normalizePassword();
-  if (!username) { toast('Enter your username', 'err'); return; }
-  if (!password || password.length < 4) { toast('Enter your password', 'err'); return; }
-  try {
-    const data = await accountApi('accountLogin', { username, password });
-    setAccountState(data.username || username, data.token || '');
-    if (Array.isArray(data.watchlist)) {
-      S.watchlist = data.watchlist;
-      localStorage.setItem('watchlist', JSON.stringify(S.watchlist));
-    }
-    document.getElementById('wl-input').value = S.watchlist.join(', ');
-    document.getElementById('acct-wl-input').value = S.watchlist.join(', ');
-    toast('Signed in', 'ok');
-    closeModal('account-modal');
-    refresh();
-  } catch (err) { toast(err.message || 'Login failed', 'err'); }
-}
-async function loadAccount(silent=false) {
-  try {
-    const username = (S.account.username || localStorage.getItem('accountUsername') || '').trim();
-    const token = (S.account.token || localStorage.getItem('accountToken') || '').trim();
-    if (!username) return null;
-    const data = await accountApi('accountLoad', token ? { username, token } : { username });
-    if (data && data.username) setAccountState(data.username, data.token || token);
-    if (Array.isArray(data.watchlist)) {
-      S.watchlist = data.watchlist;
-      localStorage.setItem('watchlist', JSON.stringify(S.watchlist));
-      document.getElementById('wl-input').value = S.watchlist.join(', ');
-      document.getElementById('acct-wl-input').value = S.watchlist.join(', ');
-    }
-    if (!silent) toast('Account loaded', 'ok');
-    return data;
-  } catch (err) {
-    if (!silent) toast(err.message || 'Load failed', 'err');
-    clearAccountState();
-    return null;
-  }
-}
-async function saveAccountWatchlist() {
-  const wl = getWatchlistFromText(document.getElementById('acct-wl-input').value);
-  if (!wl.length) { toast('Add at least one ticker', 'err'); return; }
-  S.watchlist = wl;
-  localStorage.setItem('watchlist', JSON.stringify(S.watchlist));
-  document.getElementById('wl-input').value = S.watchlist.join(', ');
-  if (!S.account.loggedIn) { toast('Watchlist saved locally', 'ok'); refresh(); return; }
-  try {
-    const data = await accountApi('accountSaveWatchlist', { username: S.account.username, token: S.account.token, watchlist: wl });
-    if (Array.isArray(data.watchlist)) {
-      S.watchlist = data.watchlist;
-      localStorage.setItem('watchlist', JSON.stringify(S.watchlist));
-    }
-    toast('Watchlist synced', 'ok');
-    refresh();
-  } catch (err) { toast(err.message || 'Sync failed', 'err'); }
-}
-async function logoutAccount() {
-  try { if (S.account.loggedIn) await accountApi('accountLogout', { username: S.account.username, token: S.account.token }); } catch {}
-  clearAccountState();
-  toast('Signed out', 'ok');
-}
 function showWatchlist(){document.getElementById('wl-input').value=S.watchlist.join(', ');document.getElementById('watchlist-modal').classList.add('open');}
-function saveWatchlist(){
-  S.watchlist=document.getElementById('wl-input').value.split(/[\s,]+/).map(s=>s.trim().toUpperCase()).filter(Boolean);
-  localStorage.setItem('watchlist',JSON.stringify(S.watchlist));
-  document.getElementById('acct-wl-input').value = S.watchlist.join(', ');
-  closeModal('watchlist-modal');
-  toast('Watchlist saved');
-  if (S.account.loggedIn) saveAccountWatchlist().catch(()=>{});
-  refresh();
-}
-function showSettings(){document.getElementById('api-key-input').value=S.apiKey;document.getElementById('refresh-select').value=String(S.refreshMs);document.getElementById('gas-url-input').value=S.gasUrl;document.getElementById('settings-modal').classList.add('open');}
+function saveWatchlist(){S.watchlist=document.getElementById('wl-input').value.split(/[\s,]+/).map(s=>s.trim().toUpperCase()).filter(Boolean);localStorage.setItem('watchlist',JSON.stringify(S.watchlist));closeModal('watchlist-modal');toast('Watchlist saved');refresh();}
+function showSettings(){document.getElementById('api-key-input').value=S.apiKey;document.getElementById('refresh-select').value=String(S.refreshMs);document.getElementById('settings-modal').classList.add('open');}
 function saveSettings(){
   S.apiKey=document.getElementById('api-key-input').value.trim();
   S.refreshMs=parseInt(document.getElementById('refresh-select').value);
-  S.gasUrl=document.getElementById('gas-url-input').value.trim();
-  localStorage.setItem('apiKey',S.apiKey);localStorage.setItem('refreshMs',String(S.refreshMs));localStorage.setItem('gasUrl',S.gasUrl);
-  closeModal('settings-modal');toast('Settings saved');startAutoRefresh();if(S.gasUrl)refresh();
+  localStorage.setItem('apiKey',S.apiKey);localStorage.setItem('refreshMs',String(S.refreshMs));
+  closeModal('settings-modal');toast('Settings saved');startAutoRefresh();refresh();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
