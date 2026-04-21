@@ -881,7 +881,7 @@ async function refresh(background=false) {
     // Single request for all quotes (no URL-length issues, no batching needed)
     const [quotesData, newsData] = await Promise.all([
       fetchAllQuotes(),
-      fetchNews([...new Set([S.chart.ticker, ...S.watchlist.slice(0, 3)])].filter(Boolean).join(','))
+      fetchNews('')
     ]);
 
     if (!quotesData.length && !cached) {
@@ -965,7 +965,7 @@ async function fetchSpecific(symbols) {
 async function fetchNews(symsStr) {
   if (!S.gasUrl) return [];
   try {
-    const res = await fetch(S.gasUrl + '?action=news&symbols=' + encodeURIComponent(symsStr));
+    const res = await fetch(S.gasUrl + '?action=news&symbols=' + encodeURIComponent(symsStr || ''));
     const data = await res.json();
     return (data && data.articles) || [];
   } catch { return []; }
@@ -978,7 +978,7 @@ async function loadNewsFallback() {
       renderNews(cached.data);
       return cached.data;
     }
-    const data = await fetchNews([...new Set([S.chart.ticker, ...S.watchlist.slice(0, 3)])].filter(Boolean).join(','));
+    const data = await fetchNews('');
     if (Array.isArray(data) && data.length) {
       S.allNews = data;
       renderNews(data);
@@ -1314,6 +1314,9 @@ function switchRtab(tab) {
     document.getElementById('rt-'+t).className = 'rtab'+(t===tab?' ra':'');
     document.getElementById('rv-'+t).className = 'rp-view'+(t===tab?' active':'');
   });
+  if (tab === 'news' && (!S.allNews || !S.allNews.length)) {
+    loadNewsFallback().catch(()=>{});
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -1747,7 +1750,7 @@ function filterNews(f) {
     btn.className = 'tab-btn' + (x === f ? (f === 'bear' ? ' t-hr' : ' t-top') : '');
   });
   renderNews(S.allNews);
-  if ((tab === 'news') && (!S.allNews || !S.allNews.length)) loadNewsFallback().catch(()=>{});
+  if ((S.activeRtab === 'news') && (!S.allNews || !S.allNews.length)) loadNewsFallback().catch(()=>{});
 }
 
 function renderNews(articles) {
